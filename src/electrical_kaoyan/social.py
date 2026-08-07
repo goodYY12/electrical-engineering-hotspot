@@ -55,6 +55,9 @@ class SocialPost(BaseModel):
     comments: int | None = Field(default=None, ge=0)
     query: str | None = None
     extraction_method: str = "public_html"
+    exact_target_match: bool = True
+    verified_fields: list[str] = Field(default_factory=list)
+    source_locator: str | None = None
     content_hash: str
     access_limited: bool = False
     commercial_markers: list[str] = Field(default_factory=list)
@@ -85,6 +88,8 @@ class HeatReport(BaseModel):
     observed_platforms: list[Platform]
     expected_platforms: list[Platform]
     platform_coverage: float
+    proxy_posts: int = 0
+    proxy_signal: float = 0.0
     notes: list[str]
 
 
@@ -155,14 +160,19 @@ def _level(signal: float, authors: int, organic_posts: int) -> str:
 
 def analyze_heat(posts: list[SocialPost], *, target_id: str, as_of: date,
                  expected_platforms: list[Platform], rules: dict) -> HeatReport:
+    from .collection import eligible_for_heat
+
     relevant = [post for post in posts if post.target_id == target_id]
     deduped = deduplicate_posts(relevant)
-    unique = [post for post in deduped if post.duplicate_of is None and not post.access_limited]
+    unique_all = [post for post in deduped if post.duplicate_of is None]
+    unique = [post for post in unique_all if eligible_for_heat(post)]
+    proxy = [post for post in unique_all if post.exact_target_match and not eligible_for_heat(post)]
     half_life = float(rules["recency_half_life_days"])
     author_cap = float(rules["author_contribution_cap"])
     commercial_weight = float(rules["commercial_weight"])
     author_organic: dict[str, float] = defaultdict(float)
     commercial_signal = 0.0
+    proxy_signal = 0.0
     dated_signals: list[tuple[date, float]] = []
     for post in unique:
         signal = _engagement(post, rules) * _recency(post, as_of, half_life)
@@ -175,6 +185,9 @@ def analyze_heat(posts: list[SocialPost], *, target_id: str, as_of: date,
             before = author_organic[author]
             author_organic[author] = min(before + signal, author_cap)
             dated_signals.append(((post.published_at or post.captured_at).date(), signal))
+    for post in proxy:
+        trace = 0.1 * _recency(post, as_of, half_life) if post.published_at else 0.05
+        proxy_signal += trace * (commercial_weight if post.is_commercial else 1.0)
     organic_signal = sum(author_organic.values())
     organic = [post for post in unique if not post.is_commercial]
     commercial = [post for post in unique if post.is_commercial]
@@ -210,6 +223,8 @@ def analyze_heat(posts: list[SocialPost], *, target_id: str, as_of: date,
         notes.append("Commercial content is at least half of unique observations; confidence is reduced.")
     if heat_level == "insufficient_data":
         notes.append("Too few independent organic observations for an ordinal heat level.")
+    if proxy:
+        notes.append("Weak or indirect traces are reported separately and do not qualify as heat observations.")
     dates = [(post.published_at or post.captured_at).date() for post in unique]
     return HeatReport(
         target_id=target_id, as_of=as_of,
@@ -221,5 +236,6 @@ def analyze_heat(posts: list[SocialPost], *, target_id: str, as_of: date,
         duplicate_posts=sum(post.duplicate_of is not None for post in deduped),
         organic_posts=len(organic), commercial_posts=len(commercial), unique_authors=authors,
         observed_platforms=observed, expected_platforms=expected,
-        platform_coverage=round(coverage, 3), notes=notes,
+        platform_coverage=round(coverage, 3), proxy_posts=len(proxy),
+        proxy_signal=round(proxy_signal, 2), notes=notes,
     )

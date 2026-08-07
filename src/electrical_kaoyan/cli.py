@@ -7,10 +7,19 @@ from typing import Annotated
 
 import typer
 
+from .collection import (
+    ObservationMethod,
+    SearchAttempt,
+    append_attempt,
+    attempt_id,
+    diagnose_collection,
+    read_attempts,
+)
 from .evidence import EvidenceLedger
 from .media import (
     append_post,
     collect_public_url,
+    platform_from_url,
     post_from_observation,
     read_posts,
     write_media_evidence,
@@ -104,11 +113,31 @@ def media_collect(
     rules: Annotated[Path, typer.Option(exists=True, dir_okay=False)] = Path("config/heat_rules.yaml"),
     query: Annotated[str | None, typer.Option()] = None,
     refresh: Annotated[bool, typer.Option()] = False,
+    attempt_log: Annotated[Path, typer.Option()] = Path("search-log.jsonl"),
 ) -> None:
     """Collect one public media page without bypassing access controls."""
     media_target = MediaTarget.model_validate_json(target.read_text(encoding="utf-8"))
-    post = collect_public_url(url=url, target=media_target, output=output, cache=cache,
-                              rules=load_heat_rules(rules), query=query, refresh=refresh)
+    now = datetime.now().astimezone()
+    try:
+        post = collect_public_url(url=url, target=media_target, output=output, cache=cache,
+                                  rules=load_heat_rules(rules), query=query, refresh=refresh)
+    except Exception as exc:
+        message = str(exc)
+        limited_markers = ("403", "429", "captcha", "login", "access denied", "forbidden")
+        outcome = "access_limited" if any(item in message.lower() for item in limited_markers) else "error"
+        append_attempt(attempt_log, SearchAttempt(
+            attempt_id=attempt_id(media_target.target_id, platform_from_url(url), query or url, now),
+            target_id=media_target.target_id, platform=platform_from_url(url), query=query or url,
+            method="public_html", attempted_at=now, outcome=outcome,
+            access_reason=message[:500], result_url=url,
+        ))
+        raise typer.BadParameter(f"collection failed and was logged: {message}") from exc
+    append_attempt(attempt_log, SearchAttempt(
+        attempt_id=attempt_id(media_target.target_id, post.platform, query or url, now),
+        target_id=media_target.target_id, platform=post.platform, query=query or url,
+        method="public_html", attempted_at=now, outcome="success", results_seen=1,
+        new_exact_matches=1, result_url=url,
+    ))
     typer.echo(post.model_dump_json(indent=2))
 
 
@@ -126,7 +155,10 @@ def media_add(
     collects: Annotated[int | None, typer.Option(min=0)] = None,
     comments: Annotated[int | None, typer.Option(min=0)] = None,
     query: Annotated[str | None, typer.Option()] = None,
-    extraction_method: Annotated[str, typer.Option()] = "agent_browser",
+    extraction_method: Annotated[ObservationMethod, typer.Option()] = ObservationMethod.AGENT_BROWSER,
+    exact_target_match: Annotated[bool, typer.Option()] = True,
+    verified_field: Annotated[list[str] | None, typer.Option()] = None,
+    source_locator: Annotated[str | None, typer.Option()] = None,
     rules: Annotated[Path, typer.Option(exists=True, dir_okay=False)] = Path("config/heat_rules.yaml"),
 ) -> None:
     """Add an observation read from a public browser page, screenshot, or user export."""
@@ -137,6 +169,8 @@ def media_add(
         published_at=datetime.fromisoformat(published_at) if published_at else None,
         likes=likes, collects=collects, comments=comments, query=query,
         extraction_method=extraction_method,
+        exact_target_match=exact_target_match, verified_fields=verified_field,
+        source_locator=source_locator,
     )
     append_post(output, post)
     typer.echo(post.model_dump_json(indent=2))
@@ -148,6 +182,7 @@ def media_heat(
     target: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
     as_of: Annotated[str, typer.Option(help="YYYY-MM-DD")],
     expected_platform: Annotated[list[Platform] | None, typer.Option()] = None,
+    attempts: Annotated[Path | None, typer.Option(exists=True, dir_okay=False)] = None,
     rules: Annotated[Path, typer.Option(exists=True, dir_okay=False)] = Path("config/heat_rules.yaml"),
     output: Annotated[Path | None, typer.Option()] = None,
     evidence_output: Annotated[Path, typer.Option()] = Path("media-evidence.json"),
@@ -160,13 +195,68 @@ def media_heat(
         raise typer.BadParameter("as-of must be YYYY-MM-DD") from exc
     posts = read_posts(input)
     heat_rules = load_heat_rules(rules)
+    expected = expected_platform or []
+    search_attempts = read_attempts(attempts)
+    assessment = diagnose_collection(target_id=media_target.target_id, posts=posts,
+                                     attempts=search_attempts, expected_platforms=expected)
     report = analyze_heat(posts, target_id=media_target.target_id, as_of=cutoff,
-                          expected_platforms=expected_platform or [], rules=heat_rules)
+                          expected_platforms=expected, rules=heat_rules)
     write_media_evidence(path=evidence_output, target=media_target, posts=posts,
-                         report=report, rules=heat_rules)
-    rendered = report.model_dump_json(indent=2)
+                         report=report, rules=heat_rules, attempts=search_attempts,
+                         assessment=assessment)
+    rendered = json.dumps({
+        **report.model_dump(mode="json"),
+        "collection_assessment": assessment.model_dump(mode="json"),
+    }, ensure_ascii=False, indent=2)
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(rendered, encoding="utf-8")
     typer.echo(f"Evidence: {evidence_output.resolve()}", err=True)
     typer.echo(rendered)
+
+
+@app.command("media-log-attempt")
+def media_log_attempt(
+    target: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    platform: Annotated[Platform, typer.Option()],
+    query: Annotated[str, typer.Option()],
+    outcome: Annotated[str, typer.Option()],
+    log: Annotated[Path, typer.Option()] = Path("search-log.jsonl"),
+    method: Annotated[str, typer.Option()] = "public_search",
+    results_seen: Annotated[int, typer.Option(min=0)] = 0,
+    new_exact_matches: Annotated[int, typer.Option(min=0)] = 0,
+    access_reason: Annotated[str | None, typer.Option()] = None,
+    result_url: Annotated[str | None, typer.Option()] = None,
+    notes: Annotated[str | None, typer.Option()] = None,
+) -> None:
+    """Record a successful, empty, failed, or access-limited collection attempt."""
+    allowed = {"success", "no_results", "access_limited", "parse_failed", "error"}
+    if outcome not in allowed:
+        raise typer.BadParameter(f"outcome must be one of: {', '.join(sorted(allowed))}")
+    media_target = MediaTarget.model_validate_json(target.read_text(encoding="utf-8"))
+    now = datetime.now().astimezone()
+    attempt = SearchAttempt(
+        attempt_id=attempt_id(media_target.target_id, platform, query, now),
+        target_id=media_target.target_id, platform=platform, query=query, method=method,
+        attempted_at=now, outcome=outcome, results_seen=results_seen,
+        new_exact_matches=new_exact_matches, access_reason=access_reason,
+        result_url=result_url, notes=notes,
+    )
+    append_attempt(log, attempt)
+    typer.echo(attempt.model_dump_json(indent=2))
+
+
+@app.command("media-diagnose")
+def media_diagnose(
+    target: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    input: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    attempts: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    expected_platform: Annotated[list[Platform], typer.Option()],
+) -> None:
+    """Explain whether sparse data means low visibility, access limits, or incomplete work."""
+    media_target = MediaTarget.model_validate_json(target.read_text(encoding="utf-8"))
+    assessment = diagnose_collection(
+        target_id=media_target.target_id, posts=read_posts(input),
+        attempts=read_attempts(attempts), expected_platforms=expected_platform,
+    )
+    typer.echo(assessment.model_dump_json(indent=2))

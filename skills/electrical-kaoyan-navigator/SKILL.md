@@ -1,6 +1,6 @@
 ---
 name: electrical-kaoyan-navigator
-description: Research, audit, compare, and explain mainland China electrical-engineering postgraduate admissions, especially 080800 and 085801. Use for 电气考研择校、考情、社媒热度、报名前关注趋势、招生名额、推免、统考、复试、拟录取、专业课改考、冲稳保、院校比较、就业证据或备考迁移分析. Treats public media as an approximate early signal, preserves uncertainty, and never invents admissions facts or probabilities.
+description: Research, audit, compare, and explain mainland China electrical-engineering postgraduate admissions, especially 080800 and 085801. Use for 电气考研择校、考情、社媒热度、报名前关注趋势、平台数据抓不到、搜索摘要、访问受限、招生名额、推免、统考、复试、拟录取、专业课改考、冲稳保、院校比较、就业证据或备考迁移分析. Diagnoses collection gaps, treats public media as an approximate early signal, and never invents admissions facts or probabilities.
 ---
 
 # Electrical Kaoyan Navigator
@@ -12,7 +12,7 @@ Build an auditable admissions case, not a prediction.
 1. Normalize the target into school, college, major code/name, degree type, study mode, direction, special program, campus, and admission year. Never merge entities merely because their names or major codes match.
 2. Collect the available user profile. Continue with explicit unknowns when optional fields are absent.
 3. Read `references/search-playbook.md` and `references/source-policy.md`; discover current official domains and pages before using secondary sources.
-4. For pre-registration popularity questions, read `references/heat-methodology.md`, collect only public media, and run `python -m electrical_kaoyan media-collect ...` followed by `media-heat`. Report ordinal heat, momentum, coverage, and confidence—not applicant counts.
+4. For pre-registration popularity questions, read `references/heat-methodology.md`. If pages are sparse, blocked, snippet-only, or ambiguous, also read `references/collection-recovery.md`. Log every query and failure before diagnosing missingness.
 5. Run `python -m electrical_kaoyan research ...`. Prefer five completed admission cycles; use at least three when older evidence is unavailable.
 6. Read `references/data-model.md` before manually correcting or importing data. Preserve field-level evidence, raw snapshots, hashes, revisions, extraction method, confidence, and formulas.
 7. Run validation. Keep conflicts and quality issues visible; never silently overwrite or auto-correct them.
@@ -32,6 +32,8 @@ Build an auditable admissions case, not a prediction.
 - Never translate media volume or heat level into applicant count, application ratio, score-line prediction, or admission probability.
 - Do not output fabricated application ratios, precise difficulty scores, discrimination claims, score-suppression claims, grid-recognition rankings, or admission probabilities.
 - Respect access controls, robots policy, rate limits, paywalls, CAPTCHAs, and login boundaries. Record `access_limited=true` rather than bypassing controls.
+- Keep search snippets, screenshots, cross-platform mentions, and unverifiable dates as proxy evidence. Never promote them to full heat observations.
+- Do not call attention low until diverse successful queries approach saturation; otherwise report the specific collection limitation.
 
 ## Commands
 
@@ -43,7 +45,9 @@ python -m electrical_kaoyan compare --case CASE_DIR --case OTHER_CASE_DIR --prof
 python -m electrical_kaoyan validate --case CASE_DIR
 python -m electrical_kaoyan media-collect --target target.json --url URL --output media.jsonl
 python -m electrical_kaoyan media-add --target target.json --platform xiaohongshu --url URL --title TITLE --text TEXT --output media.jsonl
-python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --as-of 2026-08-08 --evidence-output media-evidence.json
+python -m electrical_kaoyan media-log-attempt --target target.json --platform xiaohongshu --query QUERY --outcome access_limited --access-reason login_required
+python -m electrical_kaoyan media-diagnose --target target.json --input media.jsonl --attempts search-log.jsonl --expected-platform zhihu --expected-platform xiaohongshu
+python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --attempts search-log.jsonl --as-of 2026-08-08 --evidence-output media-evidence.json
 ```
 
 Always return the report path, `evidence.json` or `media-evidence.json` path, cutoff date, unresolved conflicts, missing evidence, and confidence.

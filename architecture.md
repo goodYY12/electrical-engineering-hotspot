@@ -23,6 +23,8 @@ Heat is modeled as a latent attention signal rather than an applicant estimate. 
 
 The ordinal heat level is deliberately not a probability or a score-line forecast. A result is useful for monitoring and school-choice timing only when its observation window, queries, missing platforms, duplicate rate, author count, and commercial share remain visible.
 
+Collection is a separate diagnostic layer. Every query attempt records its platform, method, outcome, yield, and access failure. Full public pages and date-verifiable visible observations may enter heat; search snippets, unverifiable screenshots, historical traces, and cross-platform mentions remain explicitly tiered proxy evidence. Diminishing returns across diverse queries produce a saturation measure. Sparse results are classified as low observable attention, access limitation, indexing gap, target ambiguity, or incomplete collection rather than collapsed into one generic absence.
+
 ## Cross-agent distribution
 
 The canonical `skills/` Skill uses only open Agent Skills frontmatter. Codex discovers a thin `.agents/skills/` adapter; Claude Code and WorkBuddy discover a thin `.claude/skills/` adapter. A deterministic installer copies the complete canonical Skill into Codex, Claude Code/WorkBuddy, or a caller-specified generic skills directory. Codex-only plugin metadata remains isolated in `.codex-plugin/` and `agents/openai.yaml`.
@@ -46,6 +48,7 @@ Candidate names are never required. Candidate identifiers are salted hashes scop
 - `models`: typed identifiers, cycles, facts, evidence, conflicts, profiles.
 - `storage`: schema, repositories, migrations, exports.
 - `search`: query generation, domain discovery, URL candidates.
+- `collection`: observation tiers, query/failure ledger, saturation, and missingness diagnosis.
 - `fetchers`: HTTP cache/retry/rate limiting and format dispatch.
 - `parsers`: HTML tables, PDF, Excel, Word, admission lists.
 - `normalize`: entity, year, subject, quota, and candidate normalization.

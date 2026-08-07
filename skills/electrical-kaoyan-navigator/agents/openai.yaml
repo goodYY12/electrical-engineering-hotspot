@@ -1,6 +1,6 @@
 interface:
   display_name: "电气考研择校与考情分析"
-  short_description: "以字段级证据研究电气考研院校、改考风险与个性化冲稳保定位"
-  default_prompt: "Use $electrical-kaoyan-navigator to research an electrical-engineering postgraduate target with auditable evidence."
+  short_description: "研究电气考研证据、媒体热度与平台采集缺口"
+  default_prompt: "Use $electrical-kaoyan-navigator to research an electrical-engineering postgraduate target, diagnose public-media collection gaps, and preserve auditable evidence."
 policy:
   allow_implicit_invocation: true

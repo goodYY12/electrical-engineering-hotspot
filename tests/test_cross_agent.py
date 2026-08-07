@@ -27,4 +27,5 @@ def test_generic_installer_copies_complete_skill(tmp_path):
     target = install(tmp_path)
     assert (target / "SKILL.md").exists()
     assert (target / "references" / "heat-methodology.md").exists()
+    assert (target / "references" / "collection-recovery.md").exists()
     assert not (target / "agents").exists()

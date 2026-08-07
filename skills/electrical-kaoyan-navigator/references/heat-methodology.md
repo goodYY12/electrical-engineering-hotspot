@@ -31,15 +31,17 @@ Downweight:
 ## Processing
 
 1. Define the exact program identity and query set.
-2. Record the observation window, queries attempted, platforms reached, failures, and access limitations.
+2. Record the observation window, every query attempted, platforms reached, failures, and access limitations. Read `collection-recovery.md` for missingness diagnosis.
 3. Archive public pages and retain URL, timestamps, content hash, extraction method, and visible metrics.
 4. Normalize posts; classify likely commercial content with transparent rules.
 5. Deduplicate exact URLs/content and cluster near-duplicate text.
 6. Cap each author's contribution to prevent prolific accounts from dominating.
 7. Apply recency decay with a disclosed half-life. Keep raw and decayed components.
 8. Separate organic heat, commercial heat, and momentum.
-9. Output an ordinal level: `very_low`, `low`, `medium`, `high`, `very_high`, or `insufficient_data`.
-10. Output confidence from coverage, independent-source count, time span, missing platforms, and commercial share.
+9. Keep snippet-only, screenshot-only without a verified date, historical, and cross-platform traces as proxy evidence; they cannot satisfy the minimum heat sample.
+10. Output an ordinal level: `very_low`, `low`, `medium`, `high`, `very_high`, or `insufficient_data`.
+11. Output confidence from coverage, independent-source count, time span, missing platforms, and commercial share.
+12. When data are insufficient, output one collection diagnosis instead of treating all missingness alike.
 
 ## Interpretation boundary
 

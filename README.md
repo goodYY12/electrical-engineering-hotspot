@@ -54,12 +54,35 @@ python -m electrical_kaoyan media-add --target target.json --platform xiaohongsh
 python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --output heat.json --evidence-output media-evidence.json
 ```
 
-结果同时显示自然讨论、商业内容、重复率、独立作者、平台覆盖、时间窗口、趋势和置信度。缺失的平台不会被当作零热度；`media-evidence.json` 保存目标、规则哈希、完整观察和去重关系，便于复核。
+结果同时显示自然讨论、商业内容、重复率、独立作者、平台覆盖、时间窗口、趋势和置信度。缺失的平台不会被当作零热度；`media-evidence.json` 保存目标、规则哈希、完整观察、弱代理信号、查询记录、访问失败和去重关系，便于复核。
+
+### 数据存在但抓不到时
+
+不要把搜索摘要或受限页面硬算成完整帖子。先把每次检索写入采集账本：
+
+```text
+python -m electrical_kaoyan media-log-attempt --target target.json --platform xiaohongshu --query "南京师范大学 085801 电气考研" --outcome access_limited --access-reason login_required --log search-log.jsonl
+python -m electrical_kaoyan media-log-attempt --target target.json --platform bilibili --query "南京师范大学 085801 837" --outcome success --results-seen 3 --new-exact-matches 1 --log search-log.jsonl
+```
+
+搜索摘要、Agent 浏览器、用户导出、截图、历史快照和跨平台旁证都通过 `media-add` 录入，并用 `--extraction-method` 标明来源。只有“精确命中目标、发布时间可核验、正文可见”的公开原页或浏览器观察才进入正式热度；其余内容保留为代理信号：
+
+```text
+python -m electrical_kaoyan media-add --target target.json --platform bilibili --url "公开搜索结果URL" --title "南京师范大学27电气考研全解读" --text "公开摘要" --published-at 2026-05-31T00:00:00+08:00 --extraction-method search_snippet --verified-field title --verified-field published_at --source-locator "搜索结果页URL" --output media.jsonl
+```
+
+然后诊断为什么数据不足：
+
+```text
+python -m electrical_kaoyan media-diagnose --target target.json --input media.jsonl --attempts search-log.jsonl --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --expected-platform wechat
+```
+
+诊断会区分：`low_observed_attention`（公开可见关注较低）、`access_limited`（访问限制）、`indexing_gap`（只有摘要/间接痕迹）、`target_ambiguity`（实体混淆）和 `collection_incomplete`（检索尚未充分）。只有第一种允许谨慎表述“公开可见关注较低”，所有状态都不能解释为真实讨论为零。
 
 仓库提供合成示例（不代表真实院校热度）：
 
 ```text
-python -m electrical_kaoyan media-heat --target examples/target.json --input examples/media-sample.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili
+python -m electrical_kaoyan media-heat --target examples/target.json --input examples/media-sample.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --evidence-output media-evidence.json
 ```
 
 ## 跨 Agent 安装

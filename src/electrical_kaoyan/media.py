@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from .collection import CollectionAssessment, SearchAttempt, eligible_for_heat, evidence_tier
 from .fetchers import CachedHttpFetcher
 from .social import (
     HeatReport,
@@ -84,6 +85,8 @@ def post_from_html(*, url: str, html: str, target: MediaTarget, rules: dict,
         post_id=post_id, target_id=target.target_id, platform=platform_from_url(url),
         url=url, title=title, text=text, author_id=author, published_at=_published_at(soup),
         query=query, content_hash=digest, commercial_markers=commercial, intent_markers=intent,
+        verified_fields=["url", "title", "text"] + (["published_at"] if _published_at(soup) else []),
+        source_locator=url,
     )
 
 
@@ -109,7 +112,10 @@ def post_from_observation(*, url: str, target: MediaTarget, platform: Platform, 
                           published_at: datetime | None = None, likes: int | None = None,
                           collects: int | None = None, comments: int | None = None,
                           query: str | None = None,
-                          extraction_method: str = "agent_browser") -> SocialPost:
+                          extraction_method: str = "agent_browser",
+                          exact_target_match: bool = True,
+                          verified_fields: list[str] | None = None,
+                          source_locator: str | None = None) -> SocialPost:
     combined = f"{title}\n{text}"
     commercial, intent = classify_markers(combined, rules)
     fingerprint = json.dumps({
@@ -123,6 +129,8 @@ def post_from_observation(*, url: str, target: MediaTarget, platform: Platform, 
         likes=likes, collects=collects, comments=comments, query=query,
         extraction_method=extraction_method, content_hash=digest,
         commercial_markers=commercial, intent_markers=intent,
+        exact_target_match=exact_target_match,
+        verified_fields=verified_fields or [], source_locator=source_locator,
     )
 
 
@@ -137,7 +145,9 @@ def read_posts(path: Path) -> list[SocialPost]:
 
 
 def write_media_evidence(*, path: Path, target: MediaTarget, posts: list[SocialPost],
-                         report: HeatReport, rules: dict) -> None:
+                         report: HeatReport, rules: dict,
+                         attempts: list[SearchAttempt] | None = None,
+                         assessment: CollectionAssessment | None = None) -> None:
     """Write the inputs and method behind a heat report as a reproducible ledger."""
     rules_json = json.dumps(rules, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     payload = {
@@ -146,7 +156,16 @@ def write_media_evidence(*, path: Path, target: MediaTarget, posts: list[SocialP
         "target": target.model_dump(mode="json"),
         "rules_sha256": hashlib.sha256(rules_json.encode("utf-8")).hexdigest(),
         "report": report.model_dump(mode="json"),
-        "observations": [post.model_dump(mode="json") for post in deduplicate_posts(posts)],
+        "collection_assessment": assessment.model_dump(mode="json") if assessment else None,
+        "search_attempts": [item.model_dump(mode="json") for item in (attempts or [])],
+        "observations": [
+            {
+                **post.model_dump(mode="json"),
+                "evidence_tier": evidence_tier(post.extraction_method).value,
+                "eligible_for_heat": eligible_for_heat(post),
+            }
+            for post in deduplicate_posts(posts)
+        ],
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
