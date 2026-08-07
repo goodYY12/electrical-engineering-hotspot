@@ -43,7 +43,7 @@ python -m electrical_kaoyan compare --case CASE_DIR --case OTHER_CASE_DIR --prof
 python -m electrical_kaoyan validate --case CASE_DIR
 python -m electrical_kaoyan media-collect --target target.json --url URL --output media.jsonl
 python -m electrical_kaoyan media-add --target target.json --platform xiaohongshu --url URL --title TITLE --text TEXT --output media.jsonl
-python -m electrical_kaoyan media-heat --input media.jsonl --as-of 2026-08-08
+python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --as-of 2026-08-08 --evidence-output media-evidence.json
 ```
 
-Always return the report path, `evidence.json` path, cutoff date, unresolved conflicts, missing evidence, and confidence.
+Always return the report path, `evidence.json` or `media-evidence.json` path, cutoff date, unresolved conflicts, missing evidence, and confidence.

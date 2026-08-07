@@ -51,10 +51,10 @@ python -m electrical_kaoyan compare --case runs/cqu-085801-2027 --case runs/ncep
 ```text
 python -m electrical_kaoyan media-collect --target target.json --url "公开页面URL" --output media.jsonl
 python -m electrical_kaoyan media-add --target target.json --platform xiaohongshu --url "公开页面URL" --title "页面标题" --text "Agent在公开页面看到的正文摘要" --author-id "匿名作者ID" --likes 20 --collects 8 --comments 3 --output media.jsonl
-python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --output heat.json
+python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --output heat.json --evidence-output media-evidence.json
 ```
 
-结果同时显示自然讨论、商业内容、重复率、独立作者、平台覆盖、时间窗口、趋势和置信度。缺失的平台不会被当作零热度。
+结果同时显示自然讨论、商业内容、重复率、独立作者、平台覆盖、时间窗口、趋势和置信度。缺失的平台不会被当作零热度；`media-evidence.json` 保存目标、规则哈希、完整观察和去重关系，便于复核。
 
 仓库提供合成示例（不代表真实院校热度）：
 

@@ -22,3 +22,20 @@ def test_media_heat_rejects_invalid_date(tmp_path):
                                  "--as-of", "not-a-date"])
     assert result.exit_code != 0
     assert "YYYY-MM-DD" in result.output
+
+
+def test_media_heat_writes_evidence_ledger(tmp_path):
+    target = tmp_path / "target.json"
+    target.write_text('{"school":"重庆大学","major_code":"085801"}', encoding="utf-8")
+    media = tmp_path / "media.jsonl"
+    media.write_text("", encoding="utf-8")
+    evidence = tmp_path / "media-evidence.json"
+    result = runner.invoke(app, [
+        "media-heat", "--input", str(media), "--target", str(target),
+        "--as-of", "2026-08-08", "--evidence-output", str(evidence),
+    ])
+    assert result.exit_code == 0
+    payload = __import__("json").loads(evidence.read_text(encoding="utf-8"))
+    assert payload["target"]["school"] == "重庆大学"
+    assert payload["rules_sha256"]
+    assert payload["observations"] == []

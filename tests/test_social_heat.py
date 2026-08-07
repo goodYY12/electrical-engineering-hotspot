@@ -113,3 +113,17 @@ def test_old_posts_decay_and_missing_platform_is_not_zero_heat():
     assert recent_report.organic_signal > old_report.organic_signal
     assert old_report.platform_coverage == 0.5
     assert any("not treated as zero" in note for note in old_report.notes)
+
+
+def test_three_of_four_platforms_cannot_be_high_confidence():
+    platforms = [Platform.ZHIHU, Platform.XIAOHONGSHU, Platform.BILIBILI]
+    posts = [
+        make_post(i, platform=platforms[i % 3], text=f"独立讨论 {platforms[i % 3].value} " + str(i) * 80)
+        for i in range(1, 14)
+    ]
+    report = analyze_heat(
+        posts, target_id=TARGET.target_id, as_of=date(2026, 8, 8),
+        expected_platforms=platforms + [Platform.WECHAT], rules=RULES,
+    )
+    assert report.platform_coverage == 0.75
+    assert report.confidence == "medium"

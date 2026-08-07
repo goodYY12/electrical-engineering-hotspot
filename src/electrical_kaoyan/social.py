@@ -196,8 +196,13 @@ def analyze_heat(posts: list[SocialPost], *, target_id: str, as_of: date,
             momentum = "rising" if ratio >= 1.25 else "falling" if ratio <= 0.8 else "stable"
 
     commercial_share = len(commercial) / len(unique) if unique else 0.0
-    confidence_points = int(coverage >= 0.5) + int(authors >= 5) + int(len(organic) >= 8)
-    confidence = "high" if confidence_points == 3 and commercial_share < 0.5 else "medium" if confidence_points >= 2 else "low"
+    high_confidence = (
+        coverage >= 0.9 and authors >= 8 and len(organic) >= 12 and commercial_share < 0.35
+    )
+    medium_confidence = (
+        coverage >= 0.5 and authors >= 5 and len(organic) >= 8 and commercial_share < 0.7
+    )
+    confidence = "high" if high_confidence else "medium" if medium_confidence else "low"
     notes = ["Heat is an attention signal, not an applicant count or admission forecast."]
     if coverage < 1:
         notes.append("Platform coverage is incomplete; absent platforms are not treated as zero heat.")

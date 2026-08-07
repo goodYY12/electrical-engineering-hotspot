@@ -9,7 +9,14 @@ from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 from .fetchers import CachedHttpFetcher
-from .social import MediaTarget, Platform, SocialPost, classify_markers
+from .social import (
+    HeatReport,
+    MediaTarget,
+    Platform,
+    SocialPost,
+    classify_markers,
+    deduplicate_posts,
+)
 
 PLATFORM_DOMAINS = {
     "xiaohongshu.com": Platform.XIAOHONGSHU,
@@ -127,3 +134,19 @@ def append_post(path: Path, post: SocialPost) -> None:
 
 def read_posts(path: Path) -> list[SocialPost]:
     return [SocialPost.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def write_media_evidence(*, path: Path, target: MediaTarget, posts: list[SocialPost],
+                         report: HeatReport, rules: dict) -> None:
+    """Write the inputs and method behind a heat report as a reproducible ledger."""
+    rules_json = json.dumps(rules, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    payload = {
+        "schema_version": "1.0",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "target": target.model_dump(mode="json"),
+        "rules_sha256": hashlib.sha256(rules_json.encode("utf-8")).hexdigest(),
+        "report": report.model_dump(mode="json"),
+        "observations": [post.model_dump(mode="json") for post in deduplicate_posts(posts)],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

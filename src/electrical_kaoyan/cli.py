@@ -8,7 +8,13 @@ from typing import Annotated
 import typer
 
 from .evidence import EvidenceLedger
-from .media import append_post, collect_public_url, post_from_observation, read_posts
+from .media import (
+    append_post,
+    collect_public_url,
+    post_from_observation,
+    read_posts,
+    write_media_evidence,
+)
 from .models import DegreeType, ProgramIdentity, StudyMode
 from .reporting import render_skeleton, write_markdown
 from .search import generate_queries
@@ -144,6 +150,7 @@ def media_heat(
     expected_platform: Annotated[list[Platform] | None, typer.Option()] = None,
     rules: Annotated[Path, typer.Option(exists=True, dir_okay=False)] = Path("config/heat_rules.yaml"),
     output: Annotated[Path | None, typer.Option()] = None,
+    evidence_output: Annotated[Path, typer.Option()] = Path("media-evidence.json"),
 ) -> None:
     """Estimate ordinal pre-registration attention with coverage and uncertainty."""
     media_target = MediaTarget.model_validate_json(target.read_text(encoding="utf-8"))
@@ -151,10 +158,15 @@ def media_heat(
         cutoff = date.fromisoformat(as_of)
     except ValueError as exc:
         raise typer.BadParameter("as-of must be YYYY-MM-DD") from exc
-    report = analyze_heat(read_posts(input), target_id=media_target.target_id, as_of=cutoff,
-                          expected_platforms=expected_platform or [], rules=load_heat_rules(rules))
+    posts = read_posts(input)
+    heat_rules = load_heat_rules(rules)
+    report = analyze_heat(posts, target_id=media_target.target_id, as_of=cutoff,
+                          expected_platforms=expected_platform or [], rules=heat_rules)
+    write_media_evidence(path=evidence_output, target=media_target, posts=posts,
+                         report=report, rules=heat_rules)
     rendered = report.model_dump_json(indent=2)
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(rendered, encoding="utf-8")
+    typer.echo(f"Evidence: {evidence_output.resolve()}", err=True)
     typer.echo(rendered)
