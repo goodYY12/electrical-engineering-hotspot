@@ -1,0 +1,19 @@
+grades:
+  S:
+    source_types: [ministry, chsi_yz, graduate_school, admissions_office, college_official, official_document]
+  A:
+    source_types: [university_news, official_social, employment_report, laboratory_official]
+  B:
+    source_types: [education_media, attributed_secondary]
+  C:
+    source_types: [zhihu, xiaohongshu, bilibili, forum, experience_post]
+priority: [S, A, B, C]
+fetch:
+  user_agent: "electrical-kaoyan-navigator/0.1 (+public academic research; cached)"
+  per_domain_delay_seconds: 2.0
+  retries: 3
+  backoff_base_seconds: 1.5
+  timeout_seconds: 30
+social:
+  allowed_fact_support: false
+  statuses: [unverified, verified_by_official, corroborated, contradicted]

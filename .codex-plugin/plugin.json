@@ -1,0 +1,23 @@
+{
+  "name": "electrical-kaoyan-navigator",
+  "version": "0.2.0",
+  "description": "Evidence-led electrical engineering postgraduate admissions research and school selection.",
+  "author": {
+    "name": "goodYY12"
+  },
+  "license": "MIT",
+  "keywords": ["electrical-engineering", "kaoyan", "graduate-admissions", "research"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "电气考研择校与热度分析",
+    "shortDescription": "用公开证据与社媒弱信号辅助电气考研择校",
+    "longDescription": "研究电气工程考研招生事实、专业课变化和报名前媒体热度，并明确区分事实、热度信号与不确定性。",
+    "developerName": "goodYY12",
+    "category": "Education",
+    "capabilities": ["Research", "Analyze"],
+    "defaultPrompt": [
+      "分析目标院校电气考研的报名前媒体热度、营销噪声和数据置信度。",
+      "用官方证据与公开媒体信号比较多个电气考研目标。"
+    ]
+  }
+}
