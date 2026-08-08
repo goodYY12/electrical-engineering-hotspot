@@ -13,12 +13,14 @@ Build an auditable admissions case, not a prediction.
 2. Collect the available user profile. Continue with explicit unknowns when optional fields are absent.
 3. Read `references/search-playbook.md` and `references/source-policy.md`; discover current official domains and pages before using secondary sources.
 4. For pre-registration popularity questions, read `references/heat-methodology.md`. If pages are sparse, blocked, snippet-only, or ambiguous, also read `references/collection-recovery.md`. Log every query and failure before diagnosing missingness.
+   When comparing schools, annotate each full observation with `audience_segment` and `content_category`, then generate the comparison through a JSON spec. Do not hand-rank sparse targets.
 5. Run `python -m electrical_kaoyan research ...`. Prefer five completed admission cycles; use at least three when older evidence is unavailable.
 6. Read `references/data-model.md` before manually correcting or importing data. Preserve field-level evidence, raw snapshots, hashes, revisions, extraction method, confidence, and formulas.
 7. Run validation. Keep conflicts and quality issues visible; never silently overwrite or auto-correct them.
 8. Read `references/electrical-domain.md` before interpreting subject changes, research strengths, employment, or migration cost.
 9. Read `references/decision-framework.md` before personal positioning or school comparison.
 10. Render the report with `references/report-template.md`. Separate official facts, derived results, community observations, analysis, and uncertainty.
+11. Run `media-compare-report` for a reusable heat comparison. Treat `integrity_status=pass` and `data_readiness=adequate` as separate gates: a correct report can still have insufficient evidence.
 
 ## Non-negotiable rules
 
@@ -48,6 +50,7 @@ python -m electrical_kaoyan media-add --target target.json --platform xiaohongsh
 python -m electrical_kaoyan media-log-attempt --target target.json --platform xiaohongshu --query QUERY --outcome access_limited --access-reason login_required
 python -m electrical_kaoyan media-diagnose --target target.json --input media.jsonl --attempts search-log.jsonl --expected-platform zhihu --expected-platform xiaohongshu
 python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --attempts search-log.jsonl --as-of 2026-08-08 --evidence-output media-evidence.json
+python -m electrical_kaoyan media-compare-report --spec comparison-spec.json --as-of 2026-08-08 --output heat-report.md --audit-output report-audit.json
 ```
 
-Always return the report path, `evidence.json` or `media-evidence.json` path, cutoff date, unresolved conflicts, missing evidence, and confidence.
+Always return the report path, `evidence.json` or `media-evidence.json` path, audit path, cutoff date, unresolved conflicts, missing evidence, confidence, and `data_readiness`. Never describe the dataset as complete while the audit says `incomplete`.

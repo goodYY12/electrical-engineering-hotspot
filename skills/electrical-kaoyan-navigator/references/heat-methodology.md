@@ -33,7 +33,7 @@ Downweight:
 1. Define the exact program identity and query set.
 2. Record the observation window, every query attempted, platforms reached, failures, and access limitations. Read `collection-recovery.md` for missingness diagnosis.
 3. Archive public pages and retain URL, timestamps, content hash, extraction method, and visible metrics.
-4. Normalize posts; classify likely commercial content with transparent rules.
+4. Normalize posts; classify likely commercial content with transparent rules. Also label the visible audience as `prospective_selector`, `active_preparer`, `admitted_experience`, `current_student_or_alumni`, `institution_or_seller`, or `unknown`; label content as `school_choice`, `preparation`, `experience`, `official_change`, `institution_marketing`, or `other`.
 5. Deduplicate exact URLs/content and cluster near-duplicate text.
 6. Cap each author's contribution to prevent prolific accounts from dominating.
 7. Apply recency decay with a disclosed half-life. Keep raw and decayed components.
@@ -42,9 +42,28 @@ Downweight:
 10. Output an ordinal level: `very_low`, `low`, `medium`, `high`, `very_high`, or `insufficient_data`.
 11. Output confidence from coverage, independent-source count, time span, missing platforms, and commercial share.
 12. When data are insufficient, output one collection diagnosis instead of treating all missingness alike.
+13. Enforce the configured observation window before scoring. A 90-day inclusive window ending on the cutoff begins 89 days earlier.
+14. For comparisons, generate the report and machine-readable audit together. `integrity_status` checks report structure and boundaries; `data_readiness` checks whether the evidence supports ranking. Both must pass before presenting a definitive heat ordering.
 
 ## Interpretation boundary
 
 Heat answers: “Within the observable public sample, is attention around this exact target unusually active, broad, sustained, or rising?”
 
 It does not answer: “How many people will register?” A high-heat/low-confidence result is a monitoring alert, not proof that the program will become harder. Always show data cutoff, observation window, unique authors, organic/commercial counts, platform coverage, duplicate rate, and confidence.
+
+## Reusable comparison specification
+
+Use a JSON file with shared platforms and one entry per exact target:
+
+```json
+{
+  "title": "School A vs School B",
+  "expected_platforms": ["xiaohongshu", "zhihu", "bilibili", "wechat"],
+  "targets": [
+    {"name": "School A 085801", "target": "a-target.json", "media": "a-media.jsonl", "attempts": "a-search-log.jsonl", "evidence": "a-evidence.json"},
+    {"name": "School B 085801", "target": "b-target.json", "media": "b-media.jsonl", "attempts": "b-search-log.jsonl", "evidence": "b-evidence.json"}
+  ]
+}
+```
+
+Paths are resolved relative to the specification file. Run `media-compare-report` and retain the Markdown report, per-target evidence ledgers, and JSON audit together.

@@ -102,7 +102,7 @@ def test_commercial_heat_is_separate_and_confidence_reflects_coverage():
 
 def test_old_posts_decay_and_missing_platform_is_not_zero_heat():
     recent = [make_post(i, days_ago=1) for i in range(1, 5)]
-    old = [make_post(i + 10, days_ago=90) for i in range(1, 5)]
+    old = [make_post(i + 10, days_ago=89) for i in range(1, 5)]
     recent_report = analyze_heat(recent, target_id=TARGET.target_id,
                                  as_of=date(2026, 8, 8), expected_platforms=[Platform.ZHIHU],
                                  rules=RULES)
@@ -127,3 +127,14 @@ def test_three_of_four_platforms_cannot_be_high_confidence():
     )
     assert report.platform_coverage == 0.75
     assert report.confidence == "medium"
+
+
+def test_posts_outside_observation_window_are_excluded():
+    posts = [make_post(i, days_ago=91) for i in range(1, 6)]
+    report = analyze_heat(
+        posts, target_id=TARGET.target_id, as_of=date(2026, 8, 8),
+        expected_platforms=[Platform.ZHIHU], rules=RULES,
+    )
+    assert report.total_posts == 0
+    assert report.organic_posts == 0
+    assert report.observation_start is None

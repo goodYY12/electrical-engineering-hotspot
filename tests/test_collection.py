@@ -106,6 +106,32 @@ def test_one_query_remains_collection_incomplete():
     assert result.status == "collection_incomplete"
 
 
+def test_direct_browser_login_limit_is_not_diluted_by_public_index_queries():
+    attempts = [
+        SearchAttempt(
+            attempt_id="public-1", target_id=TARGET.target_id,
+            platform=Platform.XIAOHONGSHU, query="site query 1", method="public_web_search",
+            attempted_at=datetime(2026, 8, 1, tzinfo=UTC), outcome="no_results",
+        ),
+        SearchAttempt(
+            attempt_id="public-2", target_id=TARGET.target_id,
+            platform=Platform.XIAOHONGSHU, query="site query 2", method="public_web_search",
+            attempted_at=datetime(2026, 8, 2, tzinfo=UTC), outcome="no_results",
+        ),
+        SearchAttempt(
+            attempt_id="browser-1", target_id=TARGET.target_id,
+            platform=Platform.XIAOHONGSHU, query="南京师范大学 电气考研",
+            method="user_session_browser", attempted_at=datetime(2026, 8, 3, tzinfo=UTC),
+            outcome="access_limited", access_reason="login_required",
+        ),
+    ]
+    result = diagnose_collection(
+        target_id=TARGET.target_id, posts=[], attempts=attempts,
+        expected_platforms=[Platform.XIAOHONGSHU],
+    )
+    assert result.status == "access_limited"
+
+
 def test_three_eligible_observations_are_adequate():
     posts = [post(i, Platform.BILIBILI) for i in range(1, 4)]
     result = diagnose_collection(target_id=TARGET.target_id, posts=posts, attempts=[],

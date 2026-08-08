@@ -11,5 +11,8 @@
 9. User fit, migration cost, historical preparation target bands, and position
 10. Uncertainty, conflicts, data-quality issues, and reassessment triggers
 11. Core sources and Evidence IDs
+12. Machine-readable self-audit: report integrity, data readiness, rankability, missing platforms, and blocking evidence gaps
 
 Within each section label content as `【官方事实】`, `【计算结果】`, `【社区观察】`, `【分析判断】`, or `【不确定项】`. Every key number cites an Evidence ID.
+
+For a media comparison, always include the shared cutoff/window, exact target identities, organic/commercial/proxy counts, platform coverage, collection diagnosis, audience segments, content categories, keywords, decision boundary, evidence paths, and audit path. A structurally correct report with `data_readiness=incomplete` must say that ranking is unsupported.

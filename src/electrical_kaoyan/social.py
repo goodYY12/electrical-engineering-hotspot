@@ -63,6 +63,14 @@ class SocialPost(BaseModel):
     commercial_markers: list[str] = Field(default_factory=list)
     intent_markers: list[str] = Field(default_factory=list)
     duplicate_of: str | None = None
+    audience_segment: Literal[
+        "prospective_selector", "active_preparer", "admitted_experience",
+        "current_student_or_alumni", "institution_or_seller", "unknown",
+    ] = "unknown"
+    content_category: Literal[
+        "school_choice", "preparation", "experience", "official_change",
+        "institution_marketing", "other",
+    ] = "other"
 
     @property
     def is_commercial(self) -> bool:
@@ -162,7 +170,12 @@ def analyze_heat(posts: list[SocialPost], *, target_id: str, as_of: date,
                  expected_platforms: list[Platform], rules: dict) -> HeatReport:
     from .collection import eligible_for_heat
 
-    relevant = [post for post in posts if post.target_id == target_id]
+    window_days = int(rules.get("observation_window_days", 90))
+    relevant = [
+        post for post in posts
+        if post.target_id == target_id
+        and 0 <= (as_of - (post.published_at or post.captured_at).date()).days < window_days
+    ]
     deduped = deduplicate_posts(relevant)
     unique_all = [post for post in deduped if post.duplicate_of is None]
     unique = [post for post in unique_all if eligible_for_heat(post)]

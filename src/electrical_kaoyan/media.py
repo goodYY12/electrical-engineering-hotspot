@@ -115,7 +115,9 @@ def post_from_observation(*, url: str, target: MediaTarget, platform: Platform, 
                           extraction_method: str = "agent_browser",
                           exact_target_match: bool = True,
                           verified_fields: list[str] | None = None,
-                          source_locator: str | None = None) -> SocialPost:
+                          source_locator: str | None = None,
+                          audience_segment: str = "unknown",
+                          content_category: str = "other") -> SocialPost:
     combined = f"{title}\n{text}"
     commercial, intent = classify_markers(combined, rules)
     fingerprint = json.dumps({
@@ -131,6 +133,7 @@ def post_from_observation(*, url: str, target: MediaTarget, platform: Platform, 
         commercial_markers=commercial, intent_markers=intent,
         exact_target_match=exact_target_match,
         verified_fields=verified_fields or [], source_locator=source_locator,
+        audience_segment=audience_segment, content_category=content_category,
     )
 
 

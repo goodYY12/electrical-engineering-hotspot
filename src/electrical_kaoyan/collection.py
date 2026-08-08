@@ -127,6 +127,11 @@ def diagnose_collection(*, target_id: str, posts: list[SocialPost], attempts: li
         exact = sum(eligible_for_heat(post) for post in platform_posts)
         proxy = sum(not eligible_for_heat(post) and post.exact_target_match for post in platform_posts)
         access_failures = sum(item.outcome == "access_limited" for item in platform_attempts)
+        browser_access_failures = sum(
+            item.outcome == "access_limited"
+            and item.method in {"agent_browser", "user_session_browser"}
+            for item in platform_attempts
+        )
         successful = sum(item.outcome in {"success", "no_results"} for item in platform_attempts)
         saturation = _platform_saturation(platform_attempts)
         ambiguous = any(not post.exact_target_match for post in platform_posts)
@@ -136,9 +141,9 @@ def diagnose_collection(*, target_id: str, posts: list[SocialPost], attempts: li
         elif ambiguous and not exact:
             status = "target_ambiguity"
             explanation = "Discoveries exist, but exact school/program identity is not verified."
-        elif access_failures and access_failures >= max(successful, 1):
+        elif browser_access_failures or (access_failures and access_failures >= max(successful, 1)):
             status = "access_limited"
-            explanation = "Access failures dominate the attempted collection paths."
+            explanation = "The platform's direct browser path is access-limited or access failures dominate collection."
         elif proxy and not exact:
             status = "indexing_gap"
             explanation = "Only snippets or indirect traces are visible; full dated observations are absent."

@@ -45,3 +45,14 @@ Statistics include count, minimum, Q1, median, mean, Q3, maximum, and population
 ## Evidence fact shape
 
 Every structured value is a `field_fact` with entity type/id, field path, admission year, typed value, unit, scope, evidence ID, derivation metadata, and confidence. This supports multiple competing facts without overwriting history.
+
+## Public-media observation fields
+
+Each `social_post` keeps the exact target ID, platform, stable locator, title/text, anonymized author ID, publication/capture time, visible engagement, query, extraction method, content hash, verified fields, access limitation, commercial/intent markers, and duplicate link.
+
+For reusable heat reports also keep:
+
+- `audience_segment`: prospective selector, active preparer, admitted experience, current student/alumni, institution/seller, or unknown.
+- `content_category`: school choice, preparation, experience, official change, institution marketing, or other.
+
+These are transparent analytical labels, not verified personal identities. Do not retain usernames, avatars, phone numbers, group IDs, or other unnecessary personal data when an anonymous author key is sufficient.

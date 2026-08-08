@@ -25,6 +25,7 @@ from .media import (
     write_media_evidence,
 )
 from .models import DegreeType, ProgramIdentity, StudyMode
+from .heat_reporting import generate_comparison_report
 from .reporting import render_skeleton, write_markdown
 from .search import generate_queries
 from .social import MediaTarget, Platform, analyze_heat, load_heat_rules
@@ -159,6 +160,8 @@ def media_add(
     exact_target_match: Annotated[bool, typer.Option()] = True,
     verified_field: Annotated[list[str] | None, typer.Option()] = None,
     source_locator: Annotated[str | None, typer.Option()] = None,
+    audience_segment: Annotated[str, typer.Option()] = "unknown",
+    content_category: Annotated[str, typer.Option()] = "other",
     rules: Annotated[Path, typer.Option(exists=True, dir_okay=False)] = Path("config/heat_rules.yaml"),
 ) -> None:
     """Add an observation read from a public browser page, screenshot, or user export."""
@@ -171,6 +174,7 @@ def media_add(
         extraction_method=extraction_method,
         exact_target_match=exact_target_match, verified_fields=verified_field,
         source_locator=source_locator,
+        audience_segment=audience_segment, content_category=content_category,
     )
     append_post(output, post)
     typer.echo(post.model_dump_json(indent=2))
@@ -260,3 +264,23 @@ def media_diagnose(
         attempts=read_attempts(attempts), expected_platforms=expected_platform,
     )
     typer.echo(assessment.model_dump_json(indent=2))
+
+
+@app.command("media-compare-report")
+def media_compare_report(
+    spec: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    as_of: Annotated[str, typer.Option(help="YYYY-MM-DD")],
+    output: Annotated[Path, typer.Option()] = Path("media-comparison-report.md"),
+    audit_output: Annotated[Path, typer.Option()] = Path("media-report-audit.json"),
+    rules: Annotated[Path | None, typer.Option(exists=True, dir_okay=False)] = None,
+) -> None:
+    """Generate and self-audit a reusable multi-school media heat report."""
+    try:
+        cutoff = date.fromisoformat(as_of)
+    except ValueError as exc:
+        raise typer.BadParameter("as-of must be YYYY-MM-DD") from exc
+    audit = generate_comparison_report(
+        spec_path=spec, as_of=cutoff, output=output, audit_output=audit_output,
+        rules_path=rules or Path(__file__).resolve().parents[2] / "config" / "heat_rules.yaml",
+    )
+    typer.echo(json.dumps(audit, ensure_ascii=False, indent=2))

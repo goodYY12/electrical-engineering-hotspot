@@ -1,4 +1,5 @@
 recency_half_life_days: 21
+observation_window_days: 90
 author_contribution_cap: 3.0
 commercial_weight: 0.15
 engagement_weights:

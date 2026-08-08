@@ -14,6 +14,7 @@ def test_cli_help_registers_all_commands():
     assert "media-heat" in result.stdout
     assert "media-log-attempt" in result.stdout
     assert "media-diagnose" in result.stdout
+    assert "media-compare-report" in result.stdout
 
 
 def test_media_heat_rejects_invalid_date(tmp_path):
@@ -60,3 +61,34 @@ def test_media_collect_logs_access_failure(tmp_path, monkeypatch):
     ])
     assert result.exit_code != 0
     assert '"outcome":"access_limited"' in attempts.read_text(encoding="utf-8")
+
+
+def test_media_compare_report_self_audits_sparse_data(tmp_path):
+    target = tmp_path / "target.json"
+    target.write_text('{"school":"南京师范大学","major_code":"085801"}', encoding="utf-8")
+    media = tmp_path / "media.jsonl"
+    media.write_text("", encoding="utf-8")
+    attempts = tmp_path / "attempts.jsonl"
+    attempts.write_text("", encoding="utf-8")
+    spec = tmp_path / "spec.json"
+    spec.write_text(__import__("json").dumps({
+        "title": "测试报告",
+        "expected_platforms": ["xiaohongshu"],
+        "targets": [{
+            "name": "南京师范大学",
+            "target": "target.json", "media": "media.jsonl", "attempts": "attempts.jsonl",
+            "evidence": "evidence.json",
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.md"
+    audit = tmp_path / "audit.json"
+    result = runner.invoke(app, [
+        "media-compare-report", "--spec", str(spec), "--as-of", "2026-08-08",
+        "--output", str(report), "--audit-output", str(audit),
+    ])
+    assert result.exit_code == 0, result.output
+    payload = __import__("json").loads(audit.read_text(encoding="utf-8"))
+    assert payload["integrity_status"] == "pass"
+    assert payload["data_readiness"] == "incomplete"
+    assert payload["rankable"] is False
+    assert "不能可靠排序" in report.read_text(encoding="utf-8")

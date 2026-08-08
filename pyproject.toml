@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "electrical-kaoyan-navigator"
-version = "0.3.0"
+version = "0.4.0"
 description = "Auditable research tooling for electrical engineering postgraduate admissions in mainland China"
 readme = "README.md"
 requires-python = ">=3.11"

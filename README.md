@@ -56,6 +56,16 @@ python -m electrical_kaoyan media-heat --target target.json --input media.jsonl 
 
 结果同时显示自然讨论、商业内容、重复率、独立作者、平台覆盖、时间窗口、趋势和置信度。缺失的平台不会被当作零热度；`media-evidence.json` 保存目标、规则哈希、完整观察、弱代理信号、查询记录、访问失败和去重关系，便于复核。
 
+录入正式观察时可追加 `--audience-segment`（如 `prospective_selector`、`active_preparer`、`institution_or_seller`）和 `--content-category`（如 `school_choice`、`preparation`、`institution_marketing`），用于汇总真实用户群体与内容主题。
+
+多校比较使用一个 JSON 规格文件统一平台和目标路径，然后一条命令生成报告、逐校证据账本和自检结果：
+
+```text
+python -m electrical_kaoyan media-compare-report --spec comparison-spec.json --as-of 2026-08-08 --output heat-report.md --audit-output report-audit.json
+```
+
+`integrity_status=pass` 只代表报告结构、边界和证据一致性通过；只有 `data_readiness=adequate` 且 `rankable=true` 才允许给出热度顺序。数据未就绪时，报告仍可正确生成，但必须明确拒绝排名。
+
 ### 数据存在但抓不到时
 
 不要把搜索摘要或受限页面硬算成完整帖子。先把每次检索写入采集账本：
