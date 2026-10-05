@@ -2,8 +2,48 @@ from typer.testing import CliRunner
 
 import electrical_kaoyan.cli as cli_module
 from electrical_kaoyan.cli import app
+from electrical_kaoyan.fetchers.http import FetchResult
 
 runner = CliRunner()
+
+
+def test_research_reports_when_live_discovery_has_not_run(tmp_path):
+    result = runner.invoke(app, [
+        "research", "--school", "重庆大学", "--college", "电气工程学院",
+        "--major", "085801", "--admission-year", "2027", "--output", str(tmp_path),
+    ])
+    assert result.exit_code == 0, result.output
+    case = next(tmp_path.iterdir())
+    acquisition = __import__("json").loads((case / "acquisition.json").read_text(encoding="utf-8"))
+    assert acquisition["status"] == "discovery_required"
+    assert acquisition["fetched"] == []
+
+
+def test_research_fetches_supplied_live_url_with_refresh(tmp_path, monkeypatch):
+    calls = []
+
+    def fetched(self, url, *, refresh=False):
+        calls.append((url, refresh))
+        raw = tmp_path / "notice.html"
+        raw.write_text("招生公告", encoding="utf-8")
+        return FetchResult(
+            canonical_url=url, status_code=200, media_type="text/html",
+            accessed_at="2026-10-05T00:00:00+00:00", content_hash="a" * 64,
+            raw_path=str(raw), from_cache=False,
+        )
+
+    monkeypatch.setattr(cli_module.CachedHttpFetcher, "fetch", fetched)
+    result = runner.invoke(app, [
+        "research", "--school", "重庆大学", "--college", "电气工程学院",
+        "--major", "085801", "--admission-year", "2027", "--output", str(tmp_path / "runs"),
+        "--source-url", "https://example.edu.cn/current", "--refresh",
+    ])
+    assert result.exit_code == 0, result.output
+    case = next((tmp_path / "runs").iterdir())
+    acquisition = __import__("json").loads((case / "acquisition.json").read_text(encoding="utf-8"))
+    assert acquisition["status"] == "archived"
+    assert len(acquisition["fetched"]) == 1
+    assert calls == [("https://example.edu.cn/current", True)]
 
 
 def test_cli_help_registers_all_commands():
@@ -15,6 +55,7 @@ def test_cli_help_registers_all_commands():
     assert "media-log-attempt" in result.stdout
     assert "media-diagnose" in result.stdout
     assert "media-compare-report" in result.stdout
+    assert "hotspot-web" in result.stdout
 
 
 def test_media_heat_rejects_invalid_date(tmp_path):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated
@@ -16,6 +17,8 @@ from .collection import (
     read_attempts,
 )
 from .evidence import EvidenceLedger
+from .fetchers import CachedHttpFetcher
+from .heat_reporting import generate_comparison_report
 from .media import (
     append_post,
     collect_public_url,
@@ -25,13 +28,23 @@ from .media import (
     write_media_evidence,
 )
 from .models import DegreeType, ProgramIdentity, StudyMode
-from .heat_reporting import generate_comparison_report
 from .reporting import render_skeleton, write_markdown
 from .search import generate_queries
 from .social import MediaTarget, Platform, analyze_heat, load_heat_rules
 from .storage import connect
+from .webapp import serve
 
 app = typer.Typer(no_args_is_help=True, help="电气考研证据研究与择校分析")
+
+
+@app.command("hotspot-web")
+def hotspot_web(
+    host: Annotated[str, typer.Option()] = "127.0.0.1",
+    port: Annotated[int, typer.Option(min=1, max=65535)] = 8787,
+    state: Annotated[Path, typer.Option()] = Path("runs/hotspot-web/latest.json"),
+) -> None:
+    """Run the local real-time electrical admissions hotspot website."""
+    serve(host=host, port=port, state_path=state)
 
 
 @app.command()
@@ -47,11 +60,13 @@ def research(
     refresh: Annotated[bool, typer.Option()] = False,
     official_only: Annotated[bool, typer.Option()] = False,
     include_social: Annotated[bool, typer.Option()] = False,
+    source_url: Annotated[
+        list[str] | None, typer.Option(help="Public URL discovered by the agent")
+    ] = None,
     export: Annotated[str, typer.Option()] = "markdown",
     output: Annotated[Path, typer.Option()] = Path("runs"),
 ) -> None:
-    """Create a research case and query plan; fetched facts are never fabricated."""
-    del refresh  # consumed by acquisition adapters once URLs are supplied/discovered
+    """Create a case, query plan, and archive supplied public source URLs."""
     program = ProgramIdentity(
         school=school, college=college, major_code=major, major_name=major_name,
         degree_type=degree_type, study_mode=study_mode, admission_year=admission_year,
@@ -67,6 +82,36 @@ def research(
         "official_only": official_only, "include_social": include_social,
         "queries": queries,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
+    fetch_results = []
+    fetch_errors = []
+    if source_url:
+        fetcher = CachedHttpFetcher(
+            case / "raw", user_agent="electrical-kaoyan-navigator/0.4",
+            delay_seconds=2.0,
+        )
+        for url in source_url:
+            try:
+                fetch_results.append(asdict(fetcher.fetch(url, refresh=refresh)))
+            except (RuntimeError, OSError, ValueError) as exc:
+                fetch_errors.append({"url": url, "error": str(exc)[:500]})
+    acquisition_status = (
+        "discovery_required" if not source_url else
+        "archived" if not fetch_errors else
+        "partial" if fetch_results else "failed"
+    )
+    (case / "acquisition.json").write_text(json.dumps({
+        "status": acquisition_status,
+        "live_discovery_performed_by_cli": False,
+        "source_urls_supplied": list(source_url or []),
+        "refresh_requested": refresh,
+        "fetched": fetch_results,
+        "errors": fetch_errors,
+        "next_action": (
+            "Use the host agent's current web search/browser tools, then rerun with --source-url."
+            if not source_url else
+            "Parse archived sources and attach field-level evidence."
+        ),
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     ledger = EvidenceLedger()
     ledger.export(case / "evidence.json")
     if export == "markdown":
@@ -79,7 +124,12 @@ def research(
         (case / "facts.csv").write_text("entity_id,field_path,admission_year,value,evidence_id\n", encoding="utf-8")
     else:
         raise typer.BadParameter("export must be markdown, json, or csv")
-    typer.echo(str(case.resolve()))
+    typer.echo(json.dumps({
+        "case": str(case.resolve()),
+        "acquisition_status": acquisition_status,
+        "fetched_sources": len(fetch_results),
+        "failed_sources": len(fetch_errors),
+    }, ensure_ascii=False))
 
 
 @app.command()

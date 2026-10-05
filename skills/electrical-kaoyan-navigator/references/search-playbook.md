@@ -1,5 +1,13 @@
 # Search playbook
 
+## Live discovery contract
+
+The Python query generator does not contact a search engine. Execute its queries with the host agent's current web search or browser capability, open promising results, and record the exact URL and access time. A generated `query-plan.json` proves only that discovery was planned.
+
+After discovery, pass public URLs to `research` with repeated `--source-url`. Check `acquisition.json`: only entries under `fetched` are archived HTTP observations. Search results that cannot be opened remain discovery evidence and must be labeled as snippets or access-limited observations.
+
+Use the publication or effective date to decide which admission cycle a page supports. The current access time proves freshness of retrieval, not freshness of the document's facts.
+
 ## Discovery order
 
 1. Discover and verify the university's official root domain.

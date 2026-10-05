@@ -1,4 +1,16 @@
-# 电气考研择校与考情分析
+# 电研热榜：电气工程实时热点与考研择校证据站
+
+一个面向电气工程领域的公开热点网站与可审计研究工具。网页参考 [AIHOT](https://github.com/KKKKhazix/AIHOT) 的多源聚合、事件去重和独立来源计数思路，增加院校、学院、专业代码、招生年份、证据等级与采集诊断。
+
+快速启动实时热点网页：
+
+```text
+python -m venv .venv
+.venv/Scripts/python -m pip install -e ".[dev]"
+.venv/Scripts/python -m electrical_kaoyan hotspot-web --port 8787
+```
+
+访问 `http://127.0.0.1:8787`，输入目标院校或官方入口后开始实时采集。
 
 这是一个面向中国大陆电气工程考研的证据驱动研究工具。它把公开信息保存为可复核证据，再完成招生实体对齐、名额拆分、拟录取统计、专业课变化、风险画像和个性化冲稳保分析。
 
@@ -29,9 +41,21 @@ python -m pytest
 
 ```text
 python -m electrical_kaoyan research --school "重庆大学" --college "电气工程学院" --major 085801 --admission-year 2027 --years 5 --official-only --export markdown
-python -m electrical_kaoyan research --school "华北电力大学" --college "电气与电子工程学院" --major 080800 --admission-year 2027 --include-social --refresh --export json
+python -m electrical_kaoyan research --school "华北电力大学" --college "电气与电子工程学院" --major 080800 --admission-year 2027 --include-social --source-url "Agent实时搜索发现的公开URL" --refresh --export json
 python -m electrical_kaoyan compare --case runs/cqu-085801-2027 --case runs/ncepu-080800-2027 --profile profile.json
 ```
+
+`research` 自身不连接搜索引擎。Agent 先用宿主提供的实时网页搜索或浏览器发现并打开当前页面，再通过一个或多个 `--source-url` 交给命令归档。`--refresh` 只对这些 URL 生效。每次运行都会写出 `acquisition.json`；若其中为 `status=discovery_required`，说明只生成了检索计划，尚未发生实时采集。
+
+### 实时热点网页
+
+项目包含一个轻量的本地网页，参考 [AIHOT](https://github.com/KKKKhazix/AIHOT) 的多源聚合、事件去重和独立来源计数思路，针对电气考研增加了院校、学院、专业代码、招生年份、证据等级和采集诊断：
+
+```text
+python -m electrical_kaoyan hotspot-web --port 8787
+```
+
+然后打开 `http://127.0.0.1:8787`。网页可以实时发起公开搜索，也可填写院校招生网或学院官网入口。结果保存在 `runs/hotspot-web/latest.json`。搜索摘要只作为代理线索；院校入口中公开可见的链接会单独标为官网观察。页面中的“线索指数”用于排列本轮公开可见事件，不能解释为报名人数、报录比或录取概率。
 
 ### 报名前媒体热度
 

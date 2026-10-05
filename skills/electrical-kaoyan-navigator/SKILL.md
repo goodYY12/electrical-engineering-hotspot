@@ -11,10 +11,12 @@ Build an auditable admissions case, not a prediction.
 
 1. Normalize the target into school, college, major code/name, degree type, study mode, direction, special program, campus, and admission year. Never merge entities merely because their names or major codes match.
 2. Collect the available user profile. Continue with explicit unknowns when optional fields are absent.
-3. Read `references/search-playbook.md` and `references/source-policy.md`; discover current official domains and pages before using secondary sources.
+3. Read `references/search-playbook.md` and `references/source-policy.md`. Use the host's current web search or browser tool to discover and open current official domains and pages before using secondary sources. Query generation is only a search plan: it is never evidence that a live search ran.
 4. For pre-registration popularity questions, read `references/heat-methodology.md`. If pages are sparse, blocked, snippet-only, or ambiguous, also read `references/collection-recovery.md`. Log every query and failure before diagnosing missingness.
    When comparing schools, annotate each full observation with `audience_segment` and `content_category`, then generate the comparison through a JSON spec. Do not hand-rank sparse targets.
-5. Run `python -m electrical_kaoyan research ...`. Prefer five completed admission cycles; use at least three when older evidence is unavailable.
+   For an interactive live view, run `python -m electrical_kaoyan hotspot-web --port 8787` and open `http://127.0.0.1:8787`. Supply the target college's official admissions page when available; the public search channel may return only proxy evidence or no exact matches.
+5. Run `python -m electrical_kaoyan research ...` to initialize the case. Pass every public URL found during live discovery with repeated `--source-url URL`; add `--refresh` when the current response must be fetched instead of reused from cache. Prefer five completed admission cycles; use at least three when older evidence is unavailable.
+   Inspect `acquisition.json` immediately. `status=discovery_required` means no live collection occurred. Do not present the generated query plan, empty report, or empty evidence ledger as research results. If the host has no web/search/browser capability, state that live discovery is unavailable and return the query plan as pending work.
 6. Read `references/data-model.md` before manually correcting or importing data. Preserve field-level evidence, raw snapshots, hashes, revisions, extraction method, confidence, and formulas.
 7. Run validation. Keep conflicts and quality issues visible; never silently overwrite or auto-correct them.
 8. Read `references/electrical-domain.md` before interpreting subject changes, research strengths, employment, or migration cost.
@@ -43,6 +45,7 @@ Use the package CLI; wrapper scripts under `scripts/` expose the same operations
 
 ```text
 python -m electrical_kaoyan research --school "重庆大学" --college "电气工程学院" --major 085801 --admission-year 2027 --years 5 --export markdown
+python -m electrical_kaoyan research --school "重庆大学" --college "电气工程学院" --major 085801 --admission-year 2027 --source-url "https://example.edu.cn/current-notice" --refresh --export markdown
 python -m electrical_kaoyan compare --case CASE_DIR --case OTHER_CASE_DIR --profile profile.json
 python -m electrical_kaoyan validate --case CASE_DIR
 python -m electrical_kaoyan media-collect --target target.json --url URL --output media.jsonl
@@ -51,6 +54,7 @@ python -m electrical_kaoyan media-log-attempt --target target.json --platform xi
 python -m electrical_kaoyan media-diagnose --target target.json --input media.jsonl --attempts search-log.jsonl --expected-platform zhihu --expected-platform xiaohongshu
 python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --attempts search-log.jsonl --as-of 2026-08-08 --evidence-output media-evidence.json
 python -m electrical_kaoyan media-compare-report --spec comparison-spec.json --as-of 2026-08-08 --output heat-report.md --audit-output report-audit.json
+python -m electrical_kaoyan hotspot-web --port 8787
 ```
 
 Always return the report path, `evidence.json` or `media-evidence.json` path, audit path, cutoff date, unresolved conflicts, missing evidence, confidence, and `data_readiness`. Never describe the dataset as complete while the audit says `incomplete`.

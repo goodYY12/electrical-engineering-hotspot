@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="电气考研院校热点与招生动态的实时公开信息看板">
+  <title>电研热榜｜电气考研公开热点</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="电研热榜首页">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>电研热榜</span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a class="active" href="#hot">热点</a>
+      <a href="#radar">采集雷达</a>
+      <a href="#method">方法说明</a>
+    </nav>
+    <button class="ghost-button" id="themeButton" type="button" aria-label="切换明暗主题">◐</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> PUBLIC SIGNAL MONITOR</p>
+        <h1>看见报名前，<br><em>正在升温的信号。</em></h1>
+        <p class="hero-lead">聚合院校官网与公开平台线索，追踪专业课、招生政策、复试录取和备考讨论。每条结论都保留来源和采集状态。</p>
+      </div>
+      <div class="principle-card">
+        <span class="principle-index">01</span>
+        <p>热度描述公开信息中的<strong>可见度</strong>，不代表报名人数，也不生成录取概率。</p>
+      </div>
+    </section>
+
+    <section class="query-panel" aria-labelledby="queryTitle">
+      <div class="section-heading">
+        <div>
+          <p class="kicker">LIVE QUERY</p>
+          <h2 id="queryTitle">建立一次实时观察</h2>
+        </div>
+        <p>建议补充学院和官网入口，结果会更准。</p>
+      </div>
+      <form id="queryForm">
+        <label><span>院校</span><input name="school" value="重庆大学" required maxlength="40" placeholder="如：重庆大学"></label>
+        <label><span>学院</span><input name="college" value="电气工程学院" maxlength="60" placeholder="可选"></label>
+        <label><span>专业代码</span><input name="major_code" value="085801" required pattern="\d{6}" inputmode="numeric"></label>
+        <label><span>招生年份</span><input name="admission_year" value="2027" required type="number" min="2020" max="2100"></label>
+        <label class="wide"><span>院校官方入口 <small>每行一个，可选</small></span><textarea name="seed_urls" rows="2" placeholder="https://yz.cqu.edu.cn/">https://yz.cqu.edu.cn/</textarea></label>
+        <button class="primary-button" id="refreshButton" type="submit"><span>开始实时采集</span><b>↗</b></button>
+      </form>
+      <div class="progress" id="progress" hidden><span></span><p>正在检索公开网页与院校入口，请稍候…</p></div>
+      <p class="form-error" id="formError" role="alert"></p>
+    </section>
+
+    <section class="dashboard" id="hot">
+      <div class="dashboard-main">
+        <div class="section-heading feed-heading">
+          <div>
+            <p class="kicker">NOW TRENDING</p>
+            <h2>当前热点</h2>
+          </div>
+          <div class="status-pill" id="statusPill"><span></span><b>等待首次采集</b></div>
+        </div>
+        <div class="filter-row" id="filters" aria-label="热点类别筛选">
+          <button class="selected" data-filter="全部">全部</button>
+          <button data-filter="专业课变化">专业课变化</button>
+          <button data-filter="招生政策">招生政策</button>
+          <button data-filter="复试录取">复试录取</button>
+          <button data-filter="备考讨论">备考讨论</button>
+        </div>
+        <div class="event-list" id="eventList">
+          <div class="empty-state">
+            <div class="empty-orbit"><span></span></div>
+            <h3>还没有观察记录</h3>
+            <p>填写目标院校并开始采集。页面只展示实际返回的数据。</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="radar" id="radar">
+        <div class="radar-head">
+          <div><p class="kicker">COLLECTION RADAR</p><h2>采集雷达</h2></div>
+          <time id="updatedAt">尚未更新</time>
+        </div>
+        <div class="metrics">
+          <article><strong id="metricEvents">0</strong><span>聚合事件</span></article>
+          <article><strong id="metricItems">0</strong><span>精确线索</span></article>
+          <article><strong id="metricPlatforms">0</strong><span>覆盖平台</span></article>
+          <article><strong id="metricFailures">0</strong><span>访问失败</span></article>
+        </div>
+        <div class="attempts">
+          <h3>本轮采集通道</h3>
+          <div id="attemptList"><p class="muted">运行一次采集后显示。</p></div>
+        </div>
+        <div class="method-note" id="method">
+          <span>证据规则</span>
+          <p>官网可见内容优先；搜索摘要标记为代理证据；相似标题合并为同一事件；同一来源重复结果只计一次。</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="limitations" id="limitations" hidden>
+      <p class="kicker">READ BEFORE DECIDING</p>
+      <div id="limitationList"></div>
+    </section>
+  </main>
+
+  <footer><span>电研热榜 · 本地证据工作台</span><span>方法参考 AIHOT 的多源聚合与事件热度思路</span></footer>
+  <script src="/app.js" defer></script>
+</body>
+</html>
