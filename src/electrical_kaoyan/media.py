@@ -92,7 +92,7 @@ def post_from_html(*, url: str, html: str, target: MediaTarget, rules: dict,
 
 def collect_public_url(*, url: str, target: MediaTarget, output: Path, cache: Path,
                        rules: dict, query: str | None = None, refresh: bool = False) -> SocialPost:
-    fetcher = CachedHttpFetcher(cache, user_agent="electrical-kaoyan-navigator/0.2",
+    fetcher = CachedHttpFetcher(cache, user_agent="electrical-kaoyan-navigator/0.4",
                                 delay_seconds=2.0)
     result = fetcher.fetch(url, refresh=refresh)
     raw = Path(result.raw_path)

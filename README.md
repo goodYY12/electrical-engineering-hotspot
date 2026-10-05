@@ -4,13 +4,22 @@
 
 快速启动实时热点网页：
 
-```text
+```powershell
 python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev]"
-.venv/Scripts/python -m electrical_kaoyan hotspot-web --port 8787
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m electrical_kaoyan hotspot-web --port 8787
+```
+
+Linux/macOS 使用：
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python -m electrical_kaoyan hotspot-web --port 8787
 ```
 
 访问 `http://127.0.0.1:8787`，输入目标院校或官方入口后开始实时采集。
+当前版本在用户点击“开始实时采集”时按需更新；若要持续后台刷新，可由系统计划任务或 CI 定时调用采集命令并保留证据账本。
 
 这是一个面向中国大陆电气工程考研的证据驱动研究工具。它把公开信息保存为可复核证据，再完成招生实体对齐、名额拆分、拟录取统计、专业课变化、风险画像和个性化冲稳保分析。
 

@@ -9,7 +9,7 @@ grades:
     source_types: [zhihu, xiaohongshu, bilibili, forum, experience_post]
 priority: [S, A, B, C]
 fetch:
-  user_agent: "electrical-kaoyan-navigator/0.1 (+public academic research; cached)"
+  user_agent: "electrical-kaoyan-navigator/0.4 (+public academic research; cached)"
   per_domain_delay_seconds: 2.0
   retries: 3
   backoff_base_seconds: 1.5

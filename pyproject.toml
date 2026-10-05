@@ -32,6 +32,9 @@ electrical-kaoyan = "electrical_kaoyan.cli:app"
 [tool.hatch.build.targets.wheel]
 packages = ["src/electrical_kaoyan"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"web" = "electrical_kaoyan/web"
+
 [tool.pytest.ini_options]
 addopts = "-ra"
 markers = [

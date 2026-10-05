@@ -13,7 +13,8 @@ from .hotspots import HotspotSnapshot, HotspotTarget, collect_hotspots
 
 
 def _default_web_dir() -> Path:
-    return Path(__file__).resolve().parents[2] / "web"
+    packaged = Path(__file__).resolve().with_name("web")
+    return packaged if packaged.is_dir() else Path(__file__).resolve().parents[2] / "web"
 
 
 class HotspotApplication:
