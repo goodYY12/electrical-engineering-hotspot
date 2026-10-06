@@ -1,0 +1,121 @@
+{
+  "$comment": "ElectroRadar 默认信源均为无需密钥的公开 RSS/Atom/JSON。首次启动导入；全文默认关闭，只展示摘要和原文链接。",
+  "sources": [
+    {
+      "id": "rss-ieee-spectrum", "name": "IEEE Spectrum", "kind": "rss",
+      "config": { "feedUrl": "https://spectrum.ieee.org/feeds/feed.rss", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T1_5", "owner_entity_id": "ieee", "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["国际", "行业新闻", "IEEE"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-doe-energy", "name": "U.S. Department of Energy", "kind": "rss",
+      "config": { "feedUrl": "https://www.energy.gov/rss.xml", "_aihot": { "initialBackfillLimit": 12 }, "publisherUrlPrefixes": ["https://www.energy.gov/"] },
+      "tier": "T1", "owner_entity_id": "doe", "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["官方", "政策", "国际"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-federal-register-doe", "name": "U.S. Federal Register · Energy", "kind": "json_list",
+      "config": {
+        "url": "https://www.federalregister.gov/api/v1/documents.json?per_page=30&order=newest&conditions%5Bagencies%5D%5B%5D=energy-department",
+        "mode": "json_api", "itemsPath": "results", "titlePaths": ["title"], "urlTemplate": "{raw:html_url}",
+        "summaryPaths": ["abstract"], "publishedAtPath": "publication_date", "externalIdPath": "document_number",
+        "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1", "owner_entity_id": "doe", "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["官方", "政策", "标准"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ge-vernova", "name": "GE Vernova News", "kind": "rss",
+      "config": { "feedUrl": "https://www.gevernova.com/news/rss.xml", "_aihot": { "initialBackfillLimit": 10 }, "publisherUrlPrefixes": ["https://www.gevernova.com/news/"] },
+      "tier": "T1", "owner_entity_id": "gevernova", "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["官方", "企业", "国际"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-arxiv-eess-sy", "name": "arXiv · Systems and Control", "kind": "rss",
+      "config": { "feedUrl": "https://rss.arxiv.org/rss/eess.SY", "summaryIsBody": true, "_aihot": { "initialBackfillLimit": 20 } },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["论文", "控制", "电力系统"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-ieee", "name": "IEEE Publications · Crossref", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.bibliographic=power%20systems%20energy%20storage%20power%20electronics%20smart%20grid&filter=type:journal-article,prefix:10.1109&sort=published&order=desc&rows=30&select=DOI,title,abstract,created,publisher,URL",
+        "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "urlTemplate": "{raw:URL}",
+        "summaryPaths": ["abstract"], "publishedAtPath": "created.date-time", "externalIdPath": "DOI",
+        "_aihot": { "initialBackfillLimit": 15 }
+      },
+      "tier": "T1_5", "owner_entity_id": "ieee", "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["论文", "IEEE"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-elsevier", "name": "ScienceDirect · Crossref", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.bibliographic=power%20systems%20renewable%20energy%20storage%20power%20electronics&filter=type:journal-article,prefix:10.1016&sort=published&order=desc&rows=30&select=DOI,title,abstract,created,publisher,URL",
+        "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "urlTemplate": "{raw:URL}",
+        "summaryPaths": ["abstract"], "publishedAtPath": "created.date-time", "externalIdPath": "DOI",
+        "_aihot": { "initialBackfillLimit": 15 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["论文", "ScienceDirect"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-springer", "name": "Springer Energy · Crossref", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.bibliographic=power%20systems%20renewable%20energy%20storage%20smart%20grid&filter=type:journal-article,prefix:10.1007&sort=published&order=desc&rows=30&select=DOI,title,abstract,created,publisher,URL",
+        "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "urlTemplate": "{raw:URL}",
+        "summaryPaths": ["abstract"], "publishedAtPath": "created.date-time", "externalIdPath": "DOI",
+        "_aihot": { "initialBackfillLimit": 15 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["论文", "Springer"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-power-electronics-news", "name": "Power Electronics News", "kind": "rss",
+      "config": { "feedUrl": "https://www.powerelectronicsnews.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "电力电子", "器件"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-energy-storage-news", "name": "Energy-Storage.news", "kind": "rss",
+      "config": { "feedUrl": "https://www.energy-storage.news/feed/", "_aihot": { "initialBackfillLimit": 15 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "储能", "国际"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ess-news", "name": "ESS News", "kind": "rss",
+      "config": { "feedUrl": "https://www.ess-news.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "储能"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-pv-magazine", "name": "pv magazine", "kind": "rss",
+      "config": { "feedUrl": "https://www.pv-magazine.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "光伏", "储能"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-pv-tech", "name": "PV Tech", "kind": "rss",
+      "config": { "feedUrl": "https://www.pv-tech.org/feed/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "光伏", "产业"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-power-magazine", "name": "POWER Magazine", "kind": "rss",
+      "config": { "feedUrl": "https://www.powermag.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "电力系统", "发电"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-utility-dive", "name": "Utility Dive", "kind": "rss",
+      "config": { "feedUrl": "https://www.utilitydive.com/feeds/news/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "电网", "政策"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-renewable-energy-world", "name": "Renewable Energy World", "kind": "rss",
+      "config": { "feedUrl": "https://www.renewableenergyworld.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
+      "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["媒体", "新能源", "电网"], "site_fulltext": false, "syndicate_fulltext": false
+    }
+  ]
+}

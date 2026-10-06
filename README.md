@@ -1,156 +1,133 @@
-# 电研热榜：电气工程实时热点与考研择校证据站
+# ElectroRadar（电气工程智能热点雷达）
 
-一个面向电气工程领域的公开热点网站与可审计研究工具。网页参考 [AIHOT](https://github.com/KKKKhazix/AIHOT) 的多源聚合、事件去重和独立来源计数思路，增加院校、学院、专业代码、招生年份、证据等级与采集诊断。
+ElectroRadar 是一个面向电气工程师、科研人员和行业决策者的实时技术情报系统。它持续采集全球论文、行业新闻、政策标准和企业动态，经过 AI 筛选、专业分析、事件聚合与热度计算，回答一个问题：**今天电气行业最重要的技术变化是什么？**
 
-快速启动实时热点网页：
+本项目基于 [AIHOT](https://github.com/KKKKhazix/AIHOT) 二次开发，保留其成熟的数据流、事件聚合、热点计算、日报和公开 API，并通过行业包与独立模块扩展为电气工程版本。上游分析见 [docs/AIHOT_ANALYSIS.md](docs/AIHOT_ANALYSIS.md)。
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe -m electrical_kaoyan hotspot-web --port 8787
+## 已实现
+
+- Dashboard：每日精选、今日热点 Top 10、AI 摘要与推荐理由。
+- 实时热点：48 小时事件热榜、趋势、来源数量和参与者。
+- 技术雷达：电力系统、智能电网、新能源、储能、电力电子、电机驱动、高压输电、控制系统、标准政策、产业动态。
+- 行业日报：北京时间每天 08:00 自动生成，另有周报和月报。
+- 搜索与主题：按关键词、时间、类别、标签和公司检索。
+- AI 电气专家：输出技术背景、工程影响、产业影响、相关公司、相关技术、HotScore 与置信度。
+- 自动任务：信源按小时至少检查一次；自动清洗、去重、分析、事件聚合、热度快照和成刊。
+- Agent 接入：公开 API、RSS、MCP、Agent Markdown 和 `llms.txt`。
+
+## 数据源
+
+默认配置只使用无需密钥且已验证可访问的公开接口，包括 IEEE Spectrum、美国能源部、Federal Register、GE Vernova、arXiv、Crossref（IEEE、ScienceDirect、Springer）、Power Electronics News、Energy-Storage.news、ESS News、pv magazine、PV Tech、POWER Magazine、Utility Dive 和 Renewable Energy World。
+
+付费、登录或授权受限的数据源应通过 `external` 推送或独立连接器接入。默认不绕过网站访问控制，也不会把抓取失败伪装成“没有热点”。
+
+## 技术架构
+
+| 层 | 技术 |
+|---|---|
+| Web | React 19、React Router 8 SSR、Tailwind CSS 4 |
+| API | Fastify、TypeScript |
+| Worker | pg-boss、Cron |
+| 数据 | PostgreSQL 17、顺序迁移 |
+| AI | OpenAI 兼容接口，可按步骤选择不同模型 |
+| 部署 | Docker Compose、可选 Caddy HTTPS |
+
+数据流：
+
+```text
+公开信源 → 采集 → 规范化与去重 → AI 预筛 → 两次独立评分
+        → 电气专家结构化分析 → 事件聚合 → 热榜/技术雷达 → 日报与公开 API
 ```
 
-Linux/macOS 使用：
+文章的专业 `HotScore` 由四个等权维度组成：技术突破、产业影响、工程价值、市场关注。事件热榜按独立参与来源、时间衰减和讨论增量计算，两者含义不同。
+
+## 快速启动
+
+需要 Docker（含 Compose）和一个 OpenAI 兼容的模型 API Key。
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e ".[dev]"
-.venv/bin/python -m electrical_kaoyan hotspot-web --port 8787
+git clone https://github.com/goodYY12/electrical-engineering-hotspot.git
+cd electrical-engineering-hotspot
+cp .env.example .env
 ```
 
-访问 `http://127.0.0.1:8787`，输入目标院校或官方入口后开始实时采集。
-当前版本在用户点击“开始实时采集”时按需更新；若要持续后台刷新，可由系统计划任务或 CI 定时调用采集命令并保留证据账本。
+编辑 `.env`，至少填写：
 
-这是一个面向中国大陆电气工程考研的证据驱动研究工具。它把公开信息保存为可复核证据，再完成招生实体对齐、名额拆分、拟录取统计、专业课变化、风险画像和个性化冲稳保分析。
+```dotenv
+ADMIN_PASSWORD=至少12位密码
+SESSION_SECRET=随机长字符串
+IMG_PROXY_SIGN_SECRET=随机长字符串
+POSTGRES_PASSWORD=随机长字符串
+LLM_API_KEY=你的模型密钥
+```
 
-它也提供报名前的公开媒体热度参考：通过独立作者、跨日持续性、择校意图、互动、时间衰减、重复内容和营销特征，输出近似热度、趋势和置信度。热度不是报名人数，也不用于伪造录取概率。
+启动：
 
-当前项目同时提供：
+```bash
+docker compose up -d --build
+```
 
-- 通用 Skill 内容：`skills/electrical-kaoyan-navigator/`，遵循开放 Agent Skills 规范。
-- Codex 当前推荐的可安装形式：根目录的 skills-only plugin 清单 `.codex-plugin/plugin.json`。
-- Claude Code 与 WorkBuddy：`.claude/skills/electrical-kaoyan-navigator/` 路由到同一份通用 Skill。
-- 可独立执行的 Python 包：`src/electrical_kaoyan/`。
+访问：
 
-## 边界
+- 网站：<http://localhost:3000>
+- 技术雷达：<http://localhost:3000/radar>
+- 后台：<http://localhost:3000/admin>
+- 健康检查：<http://localhost:3000/api/health>
 
-本系统提供数据整理和决策辅助，招生政策以教育部、研招网和目标院校最终公告为准。社媒只作为弱信号。由于不存在完整、同口径的考生总体样本，系统不输出虚假的录取概率。未知值不会填成 0；冲突不会静默覆盖；关键数字应能沿 Evidence ID 回到原始来源。
+首次启动会执行数据库迁移、导入默认信源并开始采集。模型处理速度取决于供应商限速和首批数据量。
 
-## 开发与安装
+如果本机代理使用 Fake IP（域名被解析到 `198.18.0.0/15`），安全抓取层会将其视为保留地址。开发环境可以在 `.env` 设置 `ALLOW_PRIVATE_NETWORK_FETCH=true`；生产环境请配置 `EGRESS_PROXY_URL`，不要关闭公网地址校验。可用 `npm run sources:check` 直接检查每个默认信源。
+
+## 本地开发
+
+需要 Node.js 24.11+ 和 PostgreSQL 17。
+
+```bash
+npm ci
+npm run db:migrate
+node scripts/seed.ts
+npm run dev:api
+npm run dev:worker
+npm run dev:web
+```
+
+三个开发进程分别监听 API、后台任务和网页。数据库与 API 地址在 `.env` 中配置。
+
+## 验证
+
+```bash
+npm run typecheck
+npm run sources:check
+npm run test:standalone
+npm test
+npm run build -w @aihot/web
+node scripts/smoke.ts --base http://localhost:3000
+```
+
+## 关键目录
 
 ```text
-python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev,pdf]"
-python -m pytest
+apps/web/                         React Router SSR 前端
+apps/api/                         Fastify API
+apps/worker/                      采集与定时任务
+packages/backend/                数据、AI、事件、热点、报告核心
+packages/contracts/              前后端共享类型
+industry/                        电气分类、主题、信源、提示词和阈值
+site/                            ElectroRadar 品牌、文案与模块注册
+modules/electrical-intelligence/ 技术雷达 API、页面、小时快照和迁移
+database/migrations/             AIHOT 核心数据库迁移
+docs/                            架构、部署与运维说明
 ```
 
-仓库内启动 Codex 时，Skill 可从 `.agents/skills/` 被发现。用于分发时，将本仓库作为本地 plugin/marketplace 源安装；插件清单直接引用同一份 Skill，避免内容漂移。若宿主未立即显示变更，刷新或重启 Codex。
+## 配置与部署
 
-## 使用
+- 完整环境变量见 [.env.example](.env.example)。
+- Docker、域名、HTTPS、代理、备份和非 Docker 部署见 [docs/deploy.md](docs/deploy.md)。
+- 信源格式与采集规则见 [docs/sources.md](docs/sources.md)。
+- AI 评分与校准见 [docs/selection.md](docs/selection.md)。
 
-```text
-python -m electrical_kaoyan research --school "重庆大学" --college "电气工程学院" --major 085801 --admission-year 2027 --years 5 --official-only --export markdown
-python -m electrical_kaoyan research --school "华北电力大学" --college "电气与电子工程学院" --major 080800 --admission-year 2027 --include-social --source-url "Agent实时搜索发现的公开URL" --refresh --export json
-python -m electrical_kaoyan compare --case runs/cqu-085801-2027 --case runs/ncepu-080800-2027 --profile profile.json
-```
+`AIHOT_*` 环境变量名属于兼容上游的内部接口，项目品牌与公开页面均使用 ElectroRadar。
 
-`research` 自身不连接搜索引擎。Agent 先用宿主提供的实时网页搜索或浏览器发现并打开当前页面，再通过一个或多个 `--source-url` 交给命令归档。`--refresh` 只对这些 URL 生效。每次运行都会写出 `acquisition.json`；若其中为 `status=discovery_required`，说明只生成了检索计划，尚未发生实时采集。
+## 许可与署名
 
-### 实时热点网页
-
-项目包含一个轻量的本地网页，参考 [AIHOT](https://github.com/KKKKhazix/AIHOT) 的多源聚合、事件去重和独立来源计数思路，针对电气考研增加了院校、学院、专业代码、招生年份、证据等级和采集诊断：
-
-```text
-python -m electrical_kaoyan hotspot-web --port 8787
-```
-
-然后打开 `http://127.0.0.1:8787`。网页可以实时发起公开搜索，也可填写院校招生网或学院官网入口。结果保存在 `runs/hotspot-web/latest.json`。搜索摘要只作为代理线索；院校入口中公开可见的链接会单独标为官网观察。页面中的“线索指数”用于排列本轮公开可见事件，不能解释为报名人数、报录比或录取概率。
-
-### 报名前媒体热度
-
-先创建目标文件：
-
-```json
-{
-  "school": "重庆大学",
-  "college": "电气工程学院",
-  "major_code": "085801",
-  "admission_year": 2027
-}
-```
-
-由 Agent 使用公开网页搜索发现帖子 URL 后，逐条归档；不得绕过登录、验证码或访问控制：
-
-```text
-python -m electrical_kaoyan media-collect --target target.json --url "公开页面URL" --output media.jsonl
-python -m electrical_kaoyan media-add --target target.json --platform xiaohongshu --url "公开页面URL" --title "页面标题" --text "Agent在公开页面看到的正文摘要" --author-id "匿名作者ID" --likes 20 --collects 8 --comments 3 --output media.jsonl
-python -m electrical_kaoyan media-heat --target target.json --input media.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --output heat.json --evidence-output media-evidence.json
-```
-
-结果同时显示自然讨论、商业内容、重复率、独立作者、平台覆盖、时间窗口、趋势和置信度。缺失的平台不会被当作零热度；`media-evidence.json` 保存目标、规则哈希、完整观察、弱代理信号、查询记录、访问失败和去重关系，便于复核。
-
-录入正式观察时可追加 `--audience-segment`（如 `prospective_selector`、`active_preparer`、`institution_or_seller`）和 `--content-category`（如 `school_choice`、`preparation`、`institution_marketing`），用于汇总真实用户群体与内容主题。
-
-多校比较使用一个 JSON 规格文件统一平台和目标路径，然后一条命令生成报告、逐校证据账本和自检结果：
-
-```text
-python -m electrical_kaoyan media-compare-report --spec comparison-spec.json --as-of 2026-08-08 --output heat-report.md --audit-output report-audit.json
-```
-
-`integrity_status=pass` 只代表报告结构、边界和证据一致性通过；只有 `data_readiness=adequate` 且 `rankable=true` 才允许给出热度顺序。数据未就绪时，报告仍可正确生成，但必须明确拒绝排名。
-
-### 数据存在但抓不到时
-
-不要把搜索摘要或受限页面硬算成完整帖子。先把每次检索写入采集账本：
-
-```text
-python -m electrical_kaoyan media-log-attempt --target target.json --platform xiaohongshu --query "南京师范大学 085801 电气考研" --outcome access_limited --access-reason login_required --log search-log.jsonl
-python -m electrical_kaoyan media-log-attempt --target target.json --platform bilibili --query "南京师范大学 085801 837" --outcome success --results-seen 3 --new-exact-matches 1 --log search-log.jsonl
-```
-
-搜索摘要、Agent 浏览器、用户导出、截图、历史快照和跨平台旁证都通过 `media-add` 录入，并用 `--extraction-method` 标明来源。只有“精确命中目标、发布时间可核验、正文可见”的公开原页或浏览器观察才进入正式热度；其余内容保留为代理信号：
-
-```text
-python -m electrical_kaoyan media-add --target target.json --platform bilibili --url "公开搜索结果URL" --title "南京师范大学27电气考研全解读" --text "公开摘要" --published-at 2026-05-31T00:00:00+08:00 --extraction-method search_snippet --verified-field title --verified-field published_at --source-locator "搜索结果页URL" --output media.jsonl
-```
-
-然后诊断为什么数据不足：
-
-```text
-python -m electrical_kaoyan media-diagnose --target target.json --input media.jsonl --attempts search-log.jsonl --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --expected-platform wechat
-```
-
-诊断会区分：`low_observed_attention`（公开可见关注较低）、`access_limited`（访问限制）、`indexing_gap`（只有摘要/间接痕迹）、`target_ambiguity`（实体混淆）和 `collection_incomplete`（检索尚未充分）。只有第一种允许谨慎表述“公开可见关注较低”，所有状态都不能解释为真实讨论为零。
-
-仓库提供合成示例（不代表真实院校热度）：
-
-```text
-python -m electrical_kaoyan media-heat --target examples/target.json --input examples/media-sample.jsonl --as-of 2026-08-08 --expected-platform zhihu --expected-platform xiaohongshu --expected-platform bilibili --evidence-output media-evidence.json
-```
-
-## 跨 Agent 安装
-
-仓库克隆后，Codex 和 Claude Code/WorkBuddy 可以直接识别各自的项目级入口。安装到个人目录：
-
-```text
-python scripts/install_agent_skill.py --agent codex
-python scripts/install_agent_skill.py --agent claude-code
-python scripts/install_agent_skill.py --agent workbuddy
-python scripts/install_agent_skill.py --agent generic --destination "/your/agent/skills"
-```
-
-其他支持开放 Agent Skills 规范的工具可直接复制 `skills/electrical-kaoyan-navigator`。不支持自动发现的 Agent 仍可读取该目录中的 `SKILL.md`，并在项目根目录运行 Python CLI。
-
-Claude Code 的项目 Skill 入口是 `.claude/skills/`；WorkBuddy 建立在 Claude Code 之上，因此使用同一入口。Codex 使用 `.agents/skills/`，插件安装则使用根目录 `skills/`。这些入口只负责发现，所有研究规则都指向同一个开放标准 Skill。
-
-## 数据与合规边界
-
-- 只读取公开可访问页面，不绕过登录、验证码、付费墙、访问控制或反爬保护。
-- 动态页面可由 Agent 浏览器读取后通过 `media-add` 结构化记录；用户导出的公开内容也可采用同一路径。
-- 不永久保存真实姓名；作者 ID 应匿名化。
-- 热度只描述可观察公开样本中的注意力，不能推导真实报名人数、报录比、分数线或录取概率。
-- 比较院校热度时必须采用相同观察窗口、平台集合和查询协议；否则只并列展示，不作机械排名。
-
-每个研究目录至少包含 `evidence.json`、研究数据库、抓取归档、质量问题和报告。实时网页会变化；可复现测试使用固定 fixture，联网验证另以 `live` 标记。
-
-更完整的设计依据见 `architecture.md`。本项目没有 Fork 或复制通用参考仓库；其局限与本项目的结构性差异也记录在该文件中。
+代码遵循 [MIT License](LICENSE)。本项目保留 AIHOT 的版权和 [NOTICE](NOTICE)；AIHOT 名称与 Logo 不属于 MIT 授权范围，ElectroRadar 使用独立名称与界面品牌。各数据源内容版权归原发布者，网站默认只展示摘要和原文链接。
