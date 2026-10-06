@@ -39,7 +39,7 @@ async function report(n: number, hoursAgo: number, subject = "sgcc"): Promise<st
   });
   await sql`UPDATE articles SET discovered_at = ${at}, timeline_at = ${at}, grouped_at = now() WHERE id = ${articleId}`;
   await sql`INSERT INTO analyses (article_id, input_revision, origin, relevance, category, title_zh, summary_zh, score, selected, subjects, tags)
-            VALUES (${articleId}, 1, 'rule', 'pass', 'power-electronics', ${`${subject} 消息 ${n}`}, '摘要', 80, true, ${[subject]}, ${['产品发布']})`;
+    VALUES (${articleId}, 1, 'rule', 'pass', 'power-electronics', ${`${subject === "sgcc" ? "国家电网" : subject === "huawei" ? "华为数字能源" : subject} 消息 ${n}`}, '摘要', 80, true, ${[subject]}, ${['产品发布']})`;
   await publishArticle(articleId, { releasedAt: new Date(at.getTime() + 60_000) });
   return articleId;
 }

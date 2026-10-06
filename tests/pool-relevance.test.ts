@@ -52,8 +52,8 @@ test("short and multi-term relevance keep cross-field AND and deterministic scor
 test("company relevance retains tag-only candidates, boosts and unique totals", async () => {
   await add("company-both", "siemens", "siemens", { title: "Siemens Energy", tags: ["entity:siemens"], age: 100 });
   await add("company-tag", "", "", { tags: ["entity:siemens"], noSearchRow: true, age: 1 });
-  await add("company-text", "Siemens Energy qy", "Siemens Energy", { title: "Siemens Energy", age: 60 });
-  await add("company-low", "Siemens Energy", "", { age: 1 });
+  await add("company-text", "siemens energy qy", "siemens energy", { title: "Siemens Energy", age: 60 });
+  await add("company-low", "siemens energy", "", { age: 1 });
   await add("company-withdrawn", "siemens", "siemens", { tags: ["entity:siemens"], visibility: "withdrawn" });
   const company = await loadPool(query("Siemens Energy"));
   assert.deepEqual(company.items.map(item => item.id), ["company-both", "company-tag", "company-text", "company-low"].map(id));

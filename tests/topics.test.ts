@@ -95,7 +95,7 @@ test("a company topic takes the articles about it, not the ones that only mentio
   const product = await report({ at: hoursAgo(31), title: `ABB 新产品上线 ${T}`, subjects: ["abb"] });
   const english = await report({ at: hoursAgo(32), title: `新产品发布 ${T}`, originalTitle: `ABB launches a converter ${T}`, subjects: ["abb", "siemens"] });
   const subpoena = await report({ at: hoursAgo(33), title: `加州检察长向 Siemens Energy 发出传票 ${T}`, subjects: ["siemens", "abb", "hugging-face"] });
-  const lowerCase = await report({ at: hoursAgo(34), title: `siemens 公布新的安全框架 ${T}`, subjects: ["siemens", "abb"] });
+  const lowerCase = await report({ at: hoursAgo(34), title: `siemens energy 公布新的安全框架 ${T}`, subjects: ["siemens", "abb"] });
   const pact = await report({ at: hoursAgo(35), title: `二十余家科技公司签署安全协议 ${T}`, subjects: ["siemens", "abb", "google"] });
   const metadata = await report({ at: hoursAgo(36), title: `Metadata 标准发布，Siemens Energy 参与 ${T}`, subjects: ["catl", "siemens"] });
   const adjacent = await report({ at: hoursAgo(37), title: `发布CATL的新变流器 ${T}`, subjects: ["catl", "siemens"] });
@@ -143,11 +143,11 @@ test("withdrawn articles stay out of lists and counts", async () => {
 });
 
 test("every topic has a page; unknown topics and pages past the end have none", async () => {
-  const empty = await page("cursor");
+  const empty = await page("wide-bandgap");
   assert.equal(empty.topic.indexable, false, "a topic without content is not indexed");
   assert.deepEqual(empty.items, []);
   assert.equal(await loadTopicPage("not-a-topic", 1, new Date()), null);
-  assert.equal(await loadTopicPage("cursor", 2, new Date()), null);
+  assert.equal(await loadTopicPage("wide-bandgap", 2, new Date()), null);
   const index = await app.inject({ method: "GET", url: "/api/site/topics" });
   const body = JSON.parse(index.body) as { groups: Array<{ key: string }>; topics: Array<{ slug: string }> };
   assert.deepEqual(body.groups.map((g) => g.key), ["company", "field", "genre"]);

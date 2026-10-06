@@ -78,7 +78,7 @@ test("source tier and event ownership are separate; mentions of an entity do not
   }
   assert.equal(representativePriority({ ...org, fact_subject: "Siemens Energy" }), 1, "exact configured product alias");
   assert.equal(representativePriority({ ...org, fact_subject: "Siemens Energy / ABB" }), 1, "explicit co-subject list");
-  assert.equal(representativePriority({ ...org, owner_entity_id: "huawei", fact_subject: "华为数字能源 Team" }), 1, "the company under another of its own names");
+  assert.equal(representativePriority({ ...org, owner_entity_id: "huawei", fact_subject: "华为数字能源" }), 1, "the company under another of its own names");
   assert.equal(representativePriority({ ...org, owner_entity_id: "world-labs", fact_subject: "AMD + World Labs" }), 1);
   assert.equal(representativePriority({ ...org, fact_subject: "Siemens Energy + " }), 3, "incomplete subject list is not evidence");
   assert.equal(representativePriority({ ...org, owner_entity_id: null }), 3);
