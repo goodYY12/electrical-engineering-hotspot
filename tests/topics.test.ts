@@ -97,10 +97,10 @@ test("a company topic takes the articles about it, not the ones that only mentio
   const subpoena = await report({ at: hoursAgo(33), title: `加州检察长向 Siemens Energy 发出传票 ${T}`, subjects: ["siemens", "abb", "hugging-face"] });
   const lowerCase = await report({ at: hoursAgo(34), title: `siemens 公布新的安全框架 ${T}`, subjects: ["siemens", "abb"] });
   const pact = await report({ at: hoursAgo(35), title: `二十余家科技公司签署安全协议 ${T}`, subjects: ["siemens", "abb", "google"] });
-  const metadata = await report({ at: hoursAgo(36), title: `Metadata 标准发布，Siemens Energy 参与 ${T}`, subjects: ["meta", "siemens"] });
-  const adjacent = await report({ at: hoursAgo(37), title: `发布Meta的新变流器 ${T}`, subjects: ["meta", "siemens"] });
+  const metadata = await report({ at: hoursAgo(36), title: `Metadata 标准发布，Siemens Energy 参与 ${T}`, subjects: ["catl", "siemens"] });
+  const adjacent = await report({ at: hoursAgo(37), title: `发布CATL的新变流器 ${T}`, subjects: ["catl", "siemens"] });
   const headline = await report({ at: hoursAgo(38), title: `ABB 被一篇盘点提到 ${T}`, subjects: ["google"] });
-  const agent = await report({ at: hoursAgo(39), title: `智能体框架发布 ${T}`, tags: ["Agent"] });
+  const agent = await report({ at: hoursAgo(39), title: `构网型变流器发布 ${T}`, tags: ["构网型变流器"] });
 
   const abb = await members("abb");
   for (const id of [about, product, english]) assert.ok(abb.includes(id), "about ABB");
@@ -108,10 +108,10 @@ test("a company topic takes the articles about it, not the ones that only mentio
   const siemens = await members("siemens");
   for (const id of [subpoena, lowerCase, metadata]) assert.ok(siemens.includes(id), "about Siemens Energy");
   for (const id of [english, pact]) assert.ok(!siemens.includes(id), "only mentions Siemens Energy");
-  const meta = await members("meta");
-  assert.ok(meta.includes(adjacent), "Meta next to Chinese text");
-  assert.ok(!meta.includes(metadata), "Metadata is not Meta");
-  assert.ok((await members("agent")).includes(agent), "a technical direction takes its tag");
+  const catl = await members("catl");
+  assert.ok(catl.includes(adjacent), "CATL next to Chinese text");
+  assert.ok(!catl.includes(metadata), "Metadata is not CATL");
+  assert.ok((await members("power-electronics")).includes(agent), "a technical direction takes its tag");
 
   // The article page names the topics it belongs to.
   const topicsOf = async (id: string) => {
@@ -121,13 +121,13 @@ test("a company topic takes the articles about it, not the ones that only mentio
   assert.deepEqual(await topicsOf(about), ["abb", "industry-business"]);
   assert.deepEqual(await topicsOf(subpoena), ["siemens", "industry-business"]);
   assert.deepEqual(await topicsOf(pact), ["industry-business"]);
-  assert.deepEqual(await topicsOf(agent), ["agent", "industry-business"]);
+  assert.deepEqual(await topicsOf(agent), ["power-electronics", "industry-business"]);
 });
 
 test("a story page names the topics of its reports", async () => {
-  const launch = await story(`智能体框架 V2 发布 ${T}`);
-  await report({ source: OFFICIAL, at: hoursAgo(26), title: `智能体框架 V2 发布 ${T}`, tags: ["Agent"], fact: await fact(launch.id, "发布 V2") });
-  assert.deepEqual(await topicsOfStory(launch.id), [{ slug: "agent", name: "Agent 智能体" }, { slug: "industry-business", name: "产品发布" }]);
+  const launch = await story(`构网型变流器 V2 发布 ${T}`);
+  await report({ source: OFFICIAL, at: hoursAgo(26), title: `构网型变流器 V2 发布 ${T}`, tags: ["构网型变流器"], fact: await fact(launch.id, "发布 V2") });
+  assert.deepEqual(await topicsOfStory(launch.id), [{ slug: "power-electronics", name: "电力电子" }, { slug: "industry-business", name: "产品发布" }]);
 });
 
 test("withdrawn articles stay out of lists and counts", async () => {
