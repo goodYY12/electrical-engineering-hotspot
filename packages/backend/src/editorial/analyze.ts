@@ -460,7 +460,7 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts = {}): 
   try {
     const scores = await runSelectionScores(a, opts);
     const sum = scores && !scores.refused && scores.values.length === SCORE_CALLS ? scores.values.reduce((total, v) => total + v, 0) : null;
-    const near = sum !== null;
+    const near = sum !== null && sum >= UNDERSTAND_FLOOR * SCORE_CALLS;
     const s = await structure;
     if ("error" in s) throw s.error;
     const original = originalPostCopy(a.xPost, a.url);

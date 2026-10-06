@@ -19,7 +19,7 @@ process.env.DEEPSEEK_BASE_URL = `${provider.url}/v1`;
 process.env.DEEPSEEK_API_KEY = "test-key";
 
 const ask = (subject: string) =>
-  chatJson({ model: "deepseek-flash", purpose: "invariant_test", subject, promptVersion: "t1", system: "s", user: `input ${subject}`, schema: z.object({ ok: z.boolean() }) });
+  chatJson({ model: "sic-gan-flash", purpose: "invariant_test", subject, promptVersion: "t1", system: "s", user: `input ${subject}`, schema: z.object({ ok: z.boolean() }) });
 
 after(async () => {
   await provider.close();
@@ -29,7 +29,7 @@ after(async () => {
 test("the migrations seed a budget for every paid service", async () => {
   const rows = await sql<{ service: string }[]>`SELECT service FROM budgets`;
   const services = new Set(rows.map((r) => r.service));
-  for (const s of ["jina", "socialdata", "dajiala", "zhipu", "deepseek", "mimo", "dashscope"]) assert.ok(services.has(s), `no budget for ${s}`);
+  for (const s of ["jina", "socialdata", "dajiala", "zhipu", "sic-gan", "mimo", "dashscope"]) assert.ok(services.has(s), `no budget for ${s}`);
 });
 
 test("an answer already received is reused instead of bought again", async () => {
@@ -124,7 +124,7 @@ test("an answer cut off at the output limit is a failed paid answer that says so
   process.env.DEEPSEEK_BASE_URL = `${cut.url}/v1`;
   try {
     await assert.rejects(
-      chatJson({ model: "deepseek-flash-think", purpose: "invariant_test", subject, promptVersion: "t1", system: "s", user: `input ${subject}`, schema: z.object({ ok: z.boolean() }) }),
+      chatJson({ model: "sic-gan-flash-think", purpose: "invariant_test", subject, promptVersion: "t1", system: "s", user: `input ${subject}`, schema: z.object({ ok: z.boolean() }) }),
       (error: unknown) => error instanceof ModelOutputError && /finish_reason=length/.test(error.message));
     const [r] = await sql`SELECT status, error FROM receipts WHERE subject=${subject}`;
     assert.equal(r!.status, "failed");
@@ -143,8 +143,8 @@ test("retries of unusable answers stop at the budget, and every request sent is 
     SELECT count(*) FILTER (WHERE started_at > now() - interval '1 minute')::int AS minute,
            count(*) FILTER (WHERE started_at > now() - interval '1 hour')::int AS hour,
            count(*)::int AS day
-    FROM receipt_attempts WHERE service = 'deepseek' AND origin = 'live' AND started_at > now() - interval '1 day'`;
-  await sql`UPDATE budgets SET per_minute = ${c!.minute + 2}, per_hour = ${c!.hour + 2}, per_day = ${c!.day + 2} WHERE service = 'deepseek'`;
+    FROM receipt_attempts WHERE service = 'sic-gan' AND origin = 'live' AND started_at > now() - interval '1 day'`;
+  await sql`UPDATE budgets SET per_minute = ${c!.minute + 2}, per_hour = ${c!.hour + 2}, per_day = ${c!.day + 2} WHERE service = 'sic-gan'`;
 
   const before = provider.hits();
   const outcomes: string[] = [];
@@ -251,7 +251,7 @@ test("with the valve off nothing is sent", async () => {
 });
 
 test("an unknown outcome is released automatically once, so a lost answer costs at most one repeat", async () => {
-  // A service without a budget row: the budget tests above may have used up deepseek's.
+  // A service without a budget row: the budget tests above may have used up sic-gan's.
   const req = { service: "invariant-unbudgeted", purpose: "invariant_test", subject: `lost-${tag()}`, identity: { lost: tag() } };
   let sent = 0;
   const lost = () => {

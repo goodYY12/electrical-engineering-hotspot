@@ -37,11 +37,11 @@ second()
   assert.doesNotMatch(html, /<script|onerror|javascript:/);
 });
 
-test("OpenAI Reader pages drop responsive navigation and recommendations, retaining captions and notes", () => {
-  const url = "https://openai.com/index/example/";
-  const input = `* [Products](https://openai.com/products/)
+test("Siemens Energy Reader pages drop responsive navigation and recommendations, retaining captions and notes", () => {
+  const url = "https://siemens.com/index/example/";
+  const input = `* [Products](https://siemens.com/products/)
 
-Introducing Example | OpenAI
+Introducing Example | Siemens Energy
 # Example
 
 Capabilities
@@ -59,15 +59,15 @@ _In_[_Benchmark⁠_⁠(opens in a new window)](https://example.org/benchmark)_, 
 
 ## Author
 
-OpenAI
+Siemens Energy
 
 _Evaluations may differ in production._
 
 ## Keep reading
 
-[View all](https://openai.com/news/)
+[View all](https://siemens.com/news/)
 
-[Another article](https://openai.com/index/another/)
+[Another article](https://siemens.com/index/another/)
 
 Footer navigation`;
   const html = markdownBody(input, url);

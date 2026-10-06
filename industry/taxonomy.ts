@@ -24,6 +24,8 @@ export const PLAIN_TERMS: readonly string[] = [
 export const ITEM_TYPES = [
   "technical_breakthrough", "product_launch", "research_paper", "standard_policy",
   "engineering_project", "business_event", "expert_analysis",
+  // Kept for reusable AIHOT receipts created before this industry pack was installed.
+  "model_release", "tool_or_prompt", "industry_event", "opinion_analysis", "tutorial_explainer",
 ] as const;
 
 export const CATEGORY_TAGS = [

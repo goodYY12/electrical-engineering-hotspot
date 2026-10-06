@@ -28,7 +28,7 @@ after(async () => {
 /** Runs the script against a provider stub; a refusal comes back as its exit code and output. */
 async function run(args: string[], providerUrl: string) {
   const env: NodeJS.ProcessEnv = { ...process.env, MODEL_CALLS_ENABLED: "true" };
-  pointModels(providerUrl, ["deepseek-flash"], env);
+  pointModels(providerUrl, ["sic-gan-flash"], env);
   try {
     const { stdout, stderr } = await exec(process.execPath, ["scripts/eval-story-digests.ts", ...args], { cwd: REPO_ROOT, env, timeout: 30_000 });
     return { code: 0, stdout, stderr };
@@ -89,7 +89,7 @@ test("a case exported from an event reaches the model exactly as the site's own 
     bodies.push(req.body);
     return answer("", "Acme 已向首批客户开放 Atlas 有限测试。", [100, 20]);
   });
-  pointModels(provider.url, ["deepseek-flash"]);
+  pointModels(provider.url, ["sic-gan-flash"]);
   const dir = scratch();
   t.after(async () => {
     await provider.close();

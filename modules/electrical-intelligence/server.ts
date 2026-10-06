@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { CATEGORIES } from "@aihot/industry/taxonomy";
 import { sql } from "@aihot/backend/db";
 import { defineServerModule } from "@aihot/backend/modules";
+import { selectedCondition } from "@aihot/backend/publication/scope";
 
 const CATEGORY_KEYS = new Set<string>(CATEGORIES.map((category) => category.key));
 
@@ -54,7 +55,7 @@ async function aggregateCategories(): Promise<CategoryAggregate[]> {
           AND p.timeline_at < ${new Date(now.getTime() - 24 * 60 * 60_000)}
       )::int AS previous_count
     FROM publications p
-    WHERE p.visibility = 'public' AND p.selected AND p.visible_after <= ${now}
+    WHERE ${selectedCondition(now)}
       AND p.timeline_at >= ${new Date(now.getTime() - 7 * 24 * 60 * 60_000)}
       AND p.category IS NOT NULL
     GROUP BY p.category`;
