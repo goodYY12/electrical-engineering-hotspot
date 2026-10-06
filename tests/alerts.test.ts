@@ -124,13 +124,13 @@ test("selected identity delays show reader impact, recovery state and the affect
     assert.ok(runs.grouping.items.some((item) => item.articleId === "group-alert-failed" && item.recovery === "manual"));
 
     const [receipt] = await sql<{ id: number }[]>`INSERT INTO receipts(logical_key,service,purpose,subject,status)
-      VALUES('group-alert-receipt','sic-gan','event_identity','article:group-alert-failed','unknown') RETURNING id`;
+      VALUES('group-alert-receipt','deepseek','event_identity','article:group-alert-failed','unknown') RETURNING id`;
     await sql`UPDATE articles SET grouping_receipt_id=${receipt!.id} WHERE id='group-alert-failed'`;
     warning = await finding();
     assert.match(warning!.heals!, /自动/);
     assert.match(warning!.heals!, /30 分钟/);
     await sql`INSERT INTO receipt_attempts(receipt_id,service,attempt,status,error)
-      VALUES(${receipt!.id},'sic-gan',1,'failed','自动放行：结果未知超过 30 分钟，未核对是否计费')`;
+      VALUES(${receipt!.id},'deepseek',1,'failed','自动放行：结果未知超过 30 分钟，未核对是否计费')`;
     warning = await finding();
     assert.match(warning!.heals!, /人工|处理后/);
     assert.match(warning!.detail!, new RegExp(`#${receipt!.id}`));
@@ -155,7 +155,7 @@ test("the ops digest does not describe unknown paid work as harmless or already 
   const enabled = process.env.FEISHU_INTERNAL_ENABLED;
   process.env.FEISHU_INTERNAL_ENABLED = "false";
   try {
-    await sql`INSERT INTO receipts(logical_key,service,purpose,status) VALUES('digest-unknown-impact','sic-gan','event_identity','unknown')`;
+    await sql`INSERT INTO receipts(logical_key,service,purpose,status) VALUES('digest-unknown-impact','deepseek','event_identity','unknown')`;
     console.log = (value: unknown) => { lines.push(String(value)); };
     await sendDigest();
     const message = lines.join("\n");

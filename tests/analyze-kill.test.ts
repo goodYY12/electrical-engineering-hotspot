@@ -56,7 +56,7 @@ function worker(articleId: string) {
     ...process.env, TEST_ARTICLE_ID: articleId, MODEL_CALLS_ENABLED: "true", COLLECT_ENABLED: "false",
     AIHOT_CREDENTIALS_DIR: "/nonexistent-test-credentials", FEISHU_INTERNAL_ENABLED: "false",
   };
-  pointModels(provider.url, ["huawei3.7-flash", "glm-5.3-flash", "sic-gan-flash", "mimo-v2.6-flash"], env);
+  pointModels(provider.url, ["qwen3.7-flash", "glm-5.3-flash", "deepseek-flash", "mimo-v2.6-flash"], env);
   const child = spawn(process.execPath, ["--input-type=module", "-e", script], { cwd: process.cwd(), env, stdio: ["ignore", "ignore", "pipe", "ipc"] });
   children.add(child);
   let message: WorkerMessage | undefined;

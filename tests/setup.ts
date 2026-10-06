@@ -26,10 +26,10 @@ process.env.COLLECT_ENABLED ??= "true";
 // local stub by the test that needs it). A step the site leaves on the `default` model gets its
 // preset here; tests/default-model.test.ts covers the default.
 const STEP_MODELS: Record<string, [env: string, model: string]> = {
-  prefilter: ["PREFILTER_MODEL", "huawei3.7-flash"], score: ["SCORE_MODEL", "glm-5.3-flash-selection"], understand: ["UNDERSTAND_MODEL", "glm-5.3-flash"],
-  summarize: ["SUMMARIZE_MODEL", "sic-gan-flash"], structure: ["STRUCTURE_MODEL", "huawei3.8-flash"], group: ["GROUP_MODEL", "sic-gan-flash"],
-  groupReview: ["GROUP_REVIEW_MODEL", "mimo-v2.6-flash"], digest: ["DIGEST_MODEL", "sic-gan-flash"], report: ["REPORT_MODEL", "sic-gan-flash"],
-  translate: ["TRANSLATE_MODEL", "sic-gan-flash"],
+  prefilter: ["PREFILTER_MODEL", "qwen3.7-flash"], score: ["SCORE_MODEL", "glm-5.3-flash-selection"], understand: ["UNDERSTAND_MODEL", "glm-5.3-flash"],
+  summarize: ["SUMMARIZE_MODEL", "deepseek-flash"], structure: ["STRUCTURE_MODEL", "qwen3.8-flash"], group: ["GROUP_MODEL", "deepseek-flash"],
+  groupReview: ["GROUP_REVIEW_MODEL", "mimo-v2.6-flash"], digest: ["DIGEST_MODEL", "deepseek-flash"], report: ["REPORT_MODEL", "deepseek-flash"],
+  translate: ["TRANSLATE_MODEL", "deepseek-flash"],
 };
 for (const [step, [env, model]] of Object.entries(STEP_MODELS)) if (!DEFAULTS[step]) process.env[env] ??= model;
 
@@ -37,7 +37,7 @@ for (const [step, [env, model]] of Object.entries(STEP_MODELS)) if (!DEFAULTS[st
  * Sends the calls of the named model presets to a stub: sets each one's address and key variables, which
  * the site's presets name. By default the providers of the article analysis (DashScope, GLM, SiC/GaN).
  */
-export function pointModels(url: string, models = ["huawei3.7-flash", "glm-5.3-flash", "sic-gan-flash"], env: NodeJS.ProcessEnv = process.env) {
+export function pointModels(url: string, models = ["qwen3.7-flash", "glm-5.3-flash", "deepseek-flash"], env: NodeJS.ProcessEnv = process.env) {
   for (const name of models) {
     const preset = PRESETS[name];
     if (!preset) throw new Error(`the site has no model preset ${name}`);

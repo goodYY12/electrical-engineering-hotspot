@@ -424,7 +424,7 @@ test("an in-flight digest cannot overwrite an editor revision or a merge, and it
     assert.deepEqual({...stored},{version:3,title:'人工修正后的事件',digest:'人工修正后的综述内容',latest:'人工确认进展',merged_into:target?.storyId ?? null});
     assert.equal((await sql`SELECT 1 FROM story_digests WHERE story_id=${g.storyId}`).length,0,'obsolete input cannot create digest history');
     const calls = provider.hits();
-    const reused = await chatJson({model:'sic-gan-flash',purpose:'story_digest',subject:`story:${g.storyId}@1`,promptVersion:DIGEST_PROMPT_VERSION,
+    const reused = await chatJson({model:'deepseek-flash',purpose:'story_digest',subject:`story:${g.storyId}@1`,promptVersion:DIGEST_PROMPT_VERSION,
       system:DIGEST_SYSTEM,user,schema:DigestSchema,temperature:0.3,maxTokens:1200});
     assert.equal(provider.hits(),calls,'the settled response is reused without another provider request');
     const [receipt] = await sql`SELECT status FROM receipts WHERE id=${reused.receiptId}`;
