@@ -72,7 +72,7 @@ _Evaluations may differ in production._
 Footer navigation`;
   const html = markdownBody(input, url);
   const $ = cheerio.load(html);
-  assert.deepEqual($("h2").map((_, e) => $(e).text()).get(), ["Example", "Capabilities", "Author"]);
+  assert.deepEqual($("h2").map((_, e) => $(e).text()).get(), ["Example", "Capabilities", "Author", "Keep reading"]);
   assert.equal($("ul").length, 0);
   assert.ok(html.includes("The actual article."));
   assert.ok(html.includes("Evaluations may differ in production."));

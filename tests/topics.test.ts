@@ -105,7 +105,7 @@ test("a company topic takes the articles about it, not the ones that only mentio
   const abb = await members("abb");
   for (const id of [about, product, english]) assert.ok(abb.includes(id), "about ABB");
   for (const id of [subpoena, lowerCase, pact, headline]) assert.ok(!abb.includes(id), "only mentions ABB");
-  const siemens = await members("siemens");
+  const siemens = await members("siemens-energy");
   for (const id of [subpoena, lowerCase, metadata]) assert.ok(siemens.includes(id), "about Siemens Energy");
   for (const id of [english, pact]) assert.ok(!siemens.includes(id), "only mentions Siemens Energy");
   const catl = await members("catl");
@@ -119,15 +119,15 @@ test("a company topic takes the articles about it, not the ones that only mentio
     return (JSON.parse(res.body) as { topics: Array<{ slug: string }> }).topics.map((t) => t.slug);
   };
   assert.deepEqual(await topicsOf(about), ["abb", "industry-business"]);
-  assert.deepEqual(await topicsOf(subpoena), ["siemens", "industry-business"]);
+  assert.deepEqual(await topicsOf(subpoena), ["siemens-energy", "industry-business"]);
   assert.deepEqual(await topicsOf(pact), ["industry-business"]);
-  assert.deepEqual(await topicsOf(agent), ["power-electronics", "industry-business"]);
+  assert.deepEqual(await topicsOf(agent), ["power-electronics", "product-launches"]);
 });
 
 test("a story page names the topics of its reports", async () => {
   const launch = await story(`构网型变流器 V2 发布 ${T}`);
   await report({ source: OFFICIAL, at: hoursAgo(26), title: `构网型变流器 V2 发布 ${T}`, tags: ["构网型变流器"], fact: await fact(launch.id, "发布 V2") });
-  assert.deepEqual(await topicsOfStory(launch.id), [{ slug: "power-electronics", name: "电力电子" }, { slug: "industry-business", name: "产品发布" }]);
+  assert.deepEqual(await topicsOfStory(launch.id), [{ slug: "power-electronics", name: "电力电子" }, { slug: "product-launches", name: "产品发布" }]);
 });
 
 test("withdrawn articles stay out of lists and counts", async () => {

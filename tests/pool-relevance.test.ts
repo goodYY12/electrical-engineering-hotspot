@@ -52,8 +52,8 @@ test("short and multi-term relevance keep cross-field AND and deterministic scor
 test("company relevance retains tag-only candidates, boosts and unique totals", async () => {
   await add("company-both", "siemens", "siemens", { title: "Siemens Energy", tags: ["entity:siemens"], age: 100 });
   await add("company-tag", "", "", { tags: ["entity:siemens"], noSearchRow: true, age: 1 });
-  await add("company-text", "siemens qy", "siemens", { title: "Siemens Energy", age: 60 });
-  await add("company-low", "siemens", "", { age: 1 });
+  await add("company-text", "Siemens Energy qy", "Siemens Energy", { title: "Siemens Energy", age: 60 });
+  await add("company-low", "Siemens Energy", "", { age: 1 });
   await add("company-withdrawn", "siemens", "siemens", { tags: ["entity:siemens"], visibility: "withdrawn" });
   const company = await loadPool(query("Siemens Energy"));
   assert.deepEqual(company.items.map(item => item.id), ["company-both", "company-tag", "company-text", "company-low"].map(id));
@@ -65,7 +65,7 @@ test("company relevance retains tag-only candidates, boosts and unique totals", 
 test("relevance retains combined filters and literal LIKE characters", async () => {
   await add("filtered", "uv", "uv", { channel: "x", category: "power-system", tags: [T] });
   await add("wrong-channel", "uv", "uv", { category: "power-system", tags: [T] });
-  await add("wrong-category", "uv", "uv", { channel: "x", tags: [T] });
+  await add("wrong-category", "uv", "uv", { channel: "x", category: "energy-storage", tags: [T] });
   await add("wrong-tag", "uv", "uv", { channel: "x", category: "power-system" });
   const filtered = await loadPool({ ...query("uv"), channel: "x", category: "power-system", tag: T });
   assert.deepEqual(filtered.items.map(item => item.id), [id("filtered")]);
