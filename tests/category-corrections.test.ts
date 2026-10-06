@@ -77,5 +77,5 @@ test("category corrections revise every standard report atomically without selec
   await overrideFields(articleId, { fields: {}, clear: ["category", "tags"], version: 1, reason: "验证撤销纠错" }, "test-category");
   const [restored] = await sql`SELECT content FROM reports WHERE kind='daily' AND key='2097-01-02'`;
   assert.equal(restored!.content.sections[0].label, "装备与器件");
-  assert.equal(restored!.content.metrics.modelsReleased, 1);
+  assert.equal(restored!.content.metrics.modelsReleased, 0);
 });

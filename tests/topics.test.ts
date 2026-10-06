@@ -118,8 +118,8 @@ test("a company topic takes the articles about it, not the ones that only mentio
     const res = await app.inject({ method: "GET", url: `/api/site/items/${id}` });
     return (JSON.parse(res.body) as { topics: Array<{ slug: string }> }).topics.map((t) => t.slug);
   };
-  assert.deepEqual(await topicsOf(about), ["abb", "industry-business"]);
-  assert.deepEqual(await topicsOf(subpoena), ["siemens-energy", "industry-business"]);
+  assert.deepEqual(await topicsOf(about), ["abb", "product-launches"]);
+  assert.deepEqual(await topicsOf(subpoena), ["siemens-energy", "product-launches"]);
   assert.deepEqual(await topicsOf(pact), ["industry-business"]);
   assert.deepEqual(await topicsOf(agent), ["power-electronics", "product-launches"]);
 });

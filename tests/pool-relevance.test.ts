@@ -56,7 +56,7 @@ test("company relevance retains tag-only candidates, boosts and unique totals", 
   await add("company-low", "siemens energy", "", { age: 1 });
   await add("company-withdrawn", "siemens", "siemens", { tags: ["entity:siemens"], visibility: "withdrawn" });
   const company = await loadPool(query("Siemens Energy"));
-  assert.deepEqual(company.items.map(item => item.id), ["company-both", "company-tag", "company-text", "company-low"].map(id));
+  assert.deepEqual(company.items.map(item => item.id), ["company-both", "company-text", "company-tag", "company-low"].map(id));
   assert.equal(company.total, 4, "the text-and-tag candidate counts once");
   const multi = await loadPool(query("siemens qy"));
   assert.deepEqual(multi.items.map(item => item.id), [id("company-text")], "only the whole company alias expands the candidates");

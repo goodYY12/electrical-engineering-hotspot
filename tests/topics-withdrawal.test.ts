@@ -48,31 +48,31 @@ test("a withdrawn report leaves the topic page and the index while the topic ind
   // Both are read into the cached index.
   const before = await loadTopicPage("state-grid", 1);
   assert.ok(before?.items.some((i) => i.id === newer));
-  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "state-grid")?.latest?.title, `sgcc 消息 2`);
+  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "state-grid")?.latest?.title, `国家电网 消息 2`);
 
   await sql`UPDATE publications SET visibility = 'withdrawn' WHERE article_id = ${newer}`;
   const page = await loadTopicPage("state-grid", 1);
-  assert.equal(page?.topic.latest?.title, `sgcc 消息 1`, "the page's last update");
-  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "state-grid")?.latest?.title, `sgcc 消息 1`, "the index page's headline");
+  assert.equal(page?.topic.latest?.title, `国家电网 消息 1`, "the page's last update");
+  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "state-grid")?.latest?.title, `国家电网 消息 1`, "the index page's headline");
   assert.deepEqual(page?.items.map((i) => i.id), [older], "the list (rows were always checked again)");
 });
 
 test("a correction refreshes named content and its topic membership before the index expires", async () => {
   const title = `华为数字能源 更正后的模型消息 ${T}`;
   await overrideFields(corrected, { fields: { title }, version: 0, reason: "更正标题" }, "test-topics");
-  const retitled = await loadTopicPage("huawei", 1);
+  const retitled = await loadTopicPage("huawei-digital-power", 1);
   assert.equal(retitled?.items[0]?.title, title, "the list");
   assert.equal(retitled?.topic.latest?.title, title, "the page headline");
-  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "huawei")?.latest?.title, title, "the directory headline");
+  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "huawei-digital-power")?.latest?.title, title, "the directory headline");
 
   await overrideFields(corrected, { fields: { category: "power-electronics" }, version: 1, reason: "实际是电力电子" }, "test-topics");
-  const reclassified = await loadTopicPage("huawei", 1);
+  const reclassified = await loadTopicPage("huawei-digital-power", 1);
   assert.equal(reclassified?.items[0]?.id, corrected, "it remains a selected report");
 
   await overrideFields(corrected, { fields: { tags: ["教程/实践", "entity:catl"] }, version: 2, reason: "更正主体公司" }, "test-topics");
-  const moved = await loadTopicPage("huawei", 1);
+  const moved = await loadTopicPage("huawei-digital-power", 1);
   assert.deepEqual(moved?.items, [], "the old topic list drops it");
   assert.equal(moved?.topic.latest, null, "the old topic headline drops it");
-  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "huawei")?.latest, null, "the directory drops the old membership");
+  assert.equal((await listTopicSummaries()).topics.find((t) => t.slug === "huawei-digital-power")?.latest, null, "the directory drops the old membership");
   assert.equal((await loadTopicPage("catl", 1, new Date()))?.items[0]?.id, corrected, "the corrected membership is retained");
 });

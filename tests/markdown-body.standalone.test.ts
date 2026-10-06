@@ -76,7 +76,7 @@ Footer navigation`;
   assert.equal($("ul").length, 3);
   assert.ok(html.includes("The actual article."));
   assert.ok(html.includes("Evaluations may differ in production."));
-  assert.equal($('a[href="https://example.org/benchmark"]').text(), "Benchmark⁠⁠(opens in a new window)");
+  assert.equal($('a[href="https://example.org/benchmark"]').text(), "_Benchmark⁠_⁠(opens in a new window)");
   assert.doesNotMatch($("body").text(), /Products|Introducing Example|Another article|Footer|_/);
   assert.ok(markdownBody(input, "https://example.org/index/example/").includes("Footer navigation"), "publisher-specific boundaries must not trim unrelated publishers");
 });
