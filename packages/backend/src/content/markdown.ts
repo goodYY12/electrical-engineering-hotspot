@@ -42,13 +42,15 @@ export function bodyToMarkdown(html: string, baseUrl?: string): string {
 export function markdownBody(markdown: string, url: string): string {
   const page = new URL(url);
   const openaiArticle = page.hostname === "openai.com" && page.pathname.startsWith("/index/");
-  if (openaiArticle) {
+  const siemensArticle = page.hostname === "siemens.com" && page.pathname.startsWith("/index/");
+  const readerArticle = openaiArticle || siemensArticle;
+  if (readerArticle) {
     // Reader splits an italic caption around its link; the invisible window hint makes its
     // adjacent underscores intraword delimiters. Join the caption without changing the link.
     markdown = markdown.replace(/_\[_([^\]\n]+?)_([\u2060\s]*\(opens in a new window\))\]\((https?:\/\/[^\s)]+)\)_/g, " [$1$2]($3)");
   }
   let html = marked.parse(markdown, { async: false, gfm: true });
-  if (openaiArticle) {
+  if (readerArticle) {
     const $ = cheerio.load(html, null, false);
     const title = $("h1").first();
     // OpenAI's rendered pages put desktop/mobile navigation before the article's H1.
@@ -69,7 +71,7 @@ export function markdownBody(markdown: string, url: string): string {
     });
     // Keep author and evaluation notes; the following section is the site's recommendation feed.
     const footer = $("h2, h3").filter((_, h) => /^(?:Keep reading|Continue reading)$/i.test($(h).text().trim())).first();
-    if (footer.next().find('a[href="https://openai.com/news/"]').length) {
+    if (footer.next().find(`a[href^="https://${openaiArticle ? "openai.com/news/" : "siemens.com/news/"}"]`).length) {
       footer.nextAll().remove();
       footer.remove();
     }
