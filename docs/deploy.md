@@ -30,6 +30,18 @@ docker compose up -d --build
 
 `docker compose` 会起五个容器：`db`（PostgreSQL 17）、`setup`（每次启动先跑数据库迁移和种子数据，然后退出）、`api`、`worker`（抓取、模型处理、定时任务）、`web`（网页）。`web` 只接收网站地址、API 地址等网页配置，通过 HTTP 读取 API；数据库、模型和管理员密钥，以及数据卷，只交给后端容器。
 
+## Vercel + Railway + Supabase
+
+生产环境可以把 Web、API、Worker 分开部署：Vercel 只部署 `apps/web`，Railway 建立两个服务并分别使用仓库中的 `deploy/Dockerfile.api` 与 `deploy/Dockerfile.worker`，Supabase 提供项目 `tkaarahbgqtwiumpqhkj` 的 PostgreSQL。
+
+Railway API 服务需要设置 `DATABASE_URL`、`SITE_URL=https://electroradar.vercel.app`、`ADMIN_PASSWORD`、`SESSION_SECRET`、`IMG_PROXY_SIGN_SECRET` 以及模型和采集相关变量；`API_HOST=0.0.0.0`，端口使用 Railway 注入的 `PORT`，健康检查路径为 `/health`。API 镜像启动时会先执行幂等的 `scripts/migrate.ts` 和 `scripts/seed.ts`，再启动 Fastify。
+
+Railway Worker 服务使用同一个 `DATABASE_URL`、`SITE_URL`、模型密钥和 `COLLECT_ENABLED=true`，启动命令为 `node apps/worker/src/main.ts`，不需要公开端口。API 与 Worker 都必须使用同一数据库，以便 pg-boss 队列和采集结果共享。
+
+`DATABASE_URL` 优先使用 Supabase Direct Connection；如果 Railway 网络仅提供 IPv4，使用 Supabase Session Pooler 的 **5432** 端口。不要使用 Transaction Pooler 的 6543 端口。密码只在 Railway 环境变量中设置，不要写入仓库。
+
+Vercel Web 项目只设置 `API_BASE_URL=https://<railway-api-domain>`、`SITE_URL=https://electroradar.vercel.app` 和 `TRUST_PROXY=true`。部署后先访问 `https://<railway-api-domain>/health`，再访问 Vercel 首页；首页的数据链路为 Worker 抓取 → Supabase → API → Web SSR。
+
 ### 在中国大陆的服务器上
 
 - 构建时 npm 走国内镜像：`docker compose build --build-arg NPM_REGISTRY=https://registry.npmmirror.com`，然后 `docker compose up -d`。
