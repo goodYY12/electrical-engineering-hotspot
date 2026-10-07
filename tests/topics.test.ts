@@ -1,0 +1,156 @@
+// Topic pages: which articles a topic takes, and their counts.
+// Written before the code, from the ways it can go wrong:
+// - a company topic takes an article about another company that only mentions it (several subjects,
+//   its name nowhere in the title), or drops one about it whose title names it in English, in another
+//   case, next to Chinese text, or only by a product (it is the article's only subject);
+// - a Latin name matches inside another word ("Metadata" is not Meta); a headline naming a company
+//   that is not a subject of the article gets in;
+// - a technical-direction topic stops taking its tags;
+// - withdrawn or not yet released articles appear in a list or a count;
+// - an article or story page names a topic its reports do not belong to;
+// - a topic without content has no page, or an unknown slug or a page past the end has one.
+import { tag } from "./setup.ts";
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { after, before, test } from "node:test";
+import { closeDb, sql } from "@aihot/backend/db";
+import { upsertMaterial } from "@aihot/backend/content/materials";
+import { stopBoss } from "@aihot/backend/jobs/queue";
+import { publishArticle } from "@aihot/backend/publication/publish";
+import { TOPICS, loadTopicPage, listTopicSummaries, topicsOfStory } from "@aihot/backend/publication/topics";
+import { buildApp } from "../apps/api/src/app.ts";
+
+const T = tag();
+const OFFICIAL = `test-topics-official-${T}`;
+const MEDIA = `test-topics-media-${T}`;
+const app = await buildApp();
+
+before(async () => {
+  await sql`INSERT INTO sources (id, name, kind, tier, participation_mode, first_party, next_fetch_at) VALUES
+    (${OFFICIAL}, 'Official', 'rss', 'T1', 'editorial', true, '2100-01-01'),
+    (${MEDIA}, 'Media', 'rss', 'T2', 'editorial', false, '2100-01-01')`;
+});
+after(async () => {
+  await app.close();
+  await stopBoss();
+  await closeDb();
+});
+
+let n = 0;
+interface Report {
+  source?: string;
+  at: Date;
+  title: string;
+  originalTitle?: string;
+  subjects?: string[];
+  tags?: string[];
+  score?: number;
+  selected?: boolean;
+  fact?: number;
+  category?: string;
+}
+
+/** A published report; `fact` links it to a fact before publishing, as grouping would. */
+async function report(r: Report): Promise<string> {
+  n += 1;
+  const { articleId } = await upsertMaterial({
+    sourceId: r.source ?? MEDIA, url: `https://example.com/topics-${T}-${n}`, title: r.originalTitle ?? r.title, bodyText: "body", bodyHtml: "<p>body</p>", bodyStatus: "ok", via: "fetch", publishedAt: r.at,
+  });
+  await sql`UPDATE articles SET discovered_at = ${r.at}, timeline_at = ${r.at}, grouped_at = now() WHERE id = ${articleId}`;
+  await sql`INSERT INTO analyses (article_id, input_revision, origin, relevance, category, title_zh, summary_zh, score, selected, subjects, tags)
+            VALUES (${articleId}, 1, 'rule', 'pass', ${r.category ?? "power-electronics"}, ${r.title}, ${`摘要 ${n}`}, ${r.score ?? 80}, ${r.selected ?? true}, ${r.subjects ?? []}, ${[r.category === "industry-business" ? "产品更新" : r.category === "paper" ? "论文/研究" : r.category === "tip" ? "教程/实践" : r.category === "industry" ? "行业动态" : r.category === "opinion" ? "大佬观点" : "产品发布", ...(r.tags ?? [])]})`;
+  if (r.fact) await sql`INSERT INTO fact_articles (fact_id, article_id, role) VALUES (${r.fact}, ${articleId}, 'report')`;
+  await publishArticle(articleId, { releasedAt: new Date(r.at.getTime() + 60_000) });
+  return articleId;
+}
+
+async function story(title: string): Promise<{ id: number; publicId: string }> {
+  const publicId = randomUUID();
+  const [s] = await sql<{ id: number }[]>`INSERT INTO stories (public_id, title, first_report_at, latest_at) VALUES (${publicId}, ${title}, now(), now()) RETURNING id`;
+  return { id: s!.id, publicId };
+}
+
+async function fact(storyId: number | null, title: string): Promise<number> {
+  const [f] = await sql<{ id: number }[]>`INSERT INTO facts (public_id, story_id, title) VALUES (${`f-${T}-${randomUUID()}`}, ${storyId}, ${title}) RETURNING id`;
+  return f!.id;
+}
+
+const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000);
+const ids = (items: Array<{ id: string }>) => items.map((i) => i.id);
+const page = async (slug: string, p = 1) => {
+  const data = await loadTopicPage(slug, p, new Date());
+  assert.ok(data, `${slug} page ${p}`);
+  return data;
+};
+/** Every article of a topic, over all its pages. */
+async function members(slug: string): Promise<string[]> {
+  const first = await page(slug);
+  const out = ids(first.items);
+  for (let p = 2; p <= first.pageCount; p++) out.push(...ids((await page(slug, p)).items));
+  return out;
+}
+
+test("a company topic takes the articles about it, not the ones that only mention it", async () => {
+  const about = await report({ at: hoursAgo(30), title: `ABB 推出电力电子设备 ${T}`, subjects: ["abb"] });
+  const product = await report({ at: hoursAgo(31), title: `ABB 新产品上线 ${T}`, subjects: ["abb"] });
+  const english = await report({ at: hoursAgo(32), title: `新产品发布 ${T}`, originalTitle: `ABB launches a converter ${T}`, subjects: ["abb", "siemens"] });
+  const subpoena = await report({ at: hoursAgo(33), title: `加州检察长向 Siemens Energy 发出传票 ${T}`, subjects: ["siemens", "abb", "hugging-face"] });
+  const lowerCase = await report({ at: hoursAgo(34), title: `siemens energy 公布新的安全框架 ${T}`, subjects: ["siemens", "abb"] });
+  const pact = await report({ at: hoursAgo(35), title: `二十余家科技公司签署安全协议 ${T}`, subjects: ["siemens", "abb", "google"] });
+  const metadata = await report({ at: hoursAgo(36), title: `Metadata 标准发布，Siemens Energy 参与 ${T}`, subjects: ["catl", "siemens"] });
+  const adjacent = await report({ at: hoursAgo(37), title: `发布CATL的新变流器 ${T}`, subjects: ["catl", "siemens"] });
+  const headline = await report({ at: hoursAgo(38), title: `ABB 被一篇盘点提到 ${T}`, subjects: ["google"] });
+  const agent = await report({ at: hoursAgo(39), title: `构网型变流器发布 ${T}`, tags: ["构网型变流器"] });
+
+  const abb = await members("abb");
+  for (const id of [about, product, english]) assert.ok(abb.includes(id), "about ABB");
+  for (const id of [subpoena, lowerCase, pact, headline]) assert.ok(!abb.includes(id), "only mentions ABB");
+  const siemens = await members("siemens-energy");
+  for (const id of [subpoena, lowerCase, metadata]) assert.ok(siemens.includes(id), "about Siemens Energy");
+  for (const id of [english, pact]) assert.ok(!siemens.includes(id), "only mentions Siemens Energy");
+  const catl = await members("catl");
+  assert.ok(catl.includes(adjacent), "CATL next to Chinese text");
+  assert.ok(!catl.includes(metadata), "Metadata is not CATL");
+  assert.ok((await members("power-electronics")).includes(agent), "a technical direction takes its tag");
+
+  // The article page names the topics it belongs to.
+  const topicsOf = async (id: string) => {
+    const res = await app.inject({ method: "GET", url: `/api/site/items/${id}` });
+    return (JSON.parse(res.body) as { topics: Array<{ slug: string }> }).topics.map((t) => t.slug);
+  };
+  assert.deepEqual(await topicsOf(about), ["abb", "product-launches"]);
+  assert.deepEqual(await topicsOf(subpoena), ["siemens-energy", "product-launches"]);
+  assert.deepEqual(await topicsOf(pact), ["product-launches"]);
+  assert.deepEqual(await topicsOf(agent), ["power-electronics", "product-launches"]);
+});
+
+test("a story page names the topics of its reports", async () => {
+  const launch = await story(`构网型变流器 V2 发布 ${T}`);
+  await report({ source: OFFICIAL, at: hoursAgo(26), title: `构网型变流器 V2 发布 ${T}`, tags: ["构网型变流器"], fact: await fact(launch.id, "发布 V2") });
+  assert.deepEqual(await topicsOfStory(launch.id), [{ slug: "power-electronics", name: "电力电子" }, { slug: "product-launches", name: "产品发布" }]);
+});
+
+test("withdrawn articles stay out of lists and counts", async () => {
+  const kept = await report({ at: hoursAgo(5), title: `宁德时代 发布新变流器 ${T}`, subjects: ["catl"] });
+  const withdrawn = await report({ at: hoursAgo(4), title: `宁德时代 撤回的消息 ${T}`, subjects: ["catl"] });
+  await sql`UPDATE publications SET visibility = 'withdrawn' WHERE article_id = ${withdrawn}`;
+
+  const data = await page("catl");
+  assert.ok(ids(data.items).includes(kept));
+  assert.ok(!ids(data.items).includes(withdrawn));
+  assert.equal(data.topic.total, data.items.length);
+  const summary = (await listTopicSummaries()).topics.find((t) => t.slug === "catl")!;
+  assert.equal(summary.latest?.title, `宁德时代 发布新变流器 ${T}`, "the index shows the newest public article");
+});
+
+test("every topic has a page; unknown topics and pages past the end have none", async () => {
+  const empty = await page("wide-bandgap");
+  assert.equal(empty.topic.indexable, false, "a topic without content is not indexed");
+  assert.deepEqual(empty.items, []);
+  assert.equal(await loadTopicPage("not-a-topic", 1, new Date()), null);
+  assert.equal(await loadTopicPage("wide-bandgap", 2, new Date()), null);
+  const index = await app.inject({ method: "GET", url: "/api/site/topics" });
+  const body = JSON.parse(index.body) as { groups: Array<{ key: string }>; topics: Array<{ slug: string }> };
+  assert.deepEqual(body.groups.map((g) => g.key), ["company", "field", "genre"]);
+  assert.deepEqual(body.topics.map((t) => t.slug).sort(), TOPICS.map((t) => t.slug).sort(), "the index lists every topic");
+});

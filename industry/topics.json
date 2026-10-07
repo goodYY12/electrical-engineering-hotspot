@@ -1,0 +1,38 @@
+{
+  "groups": [
+    { "key": "company", "name": "企业与机构", "blurb": "追踪电网、标准组织和关键设备企业" },
+    { "key": "field", "name": "技术雷达", "blurb": "观察电气工程关键技术方向的热度和演进" },
+    { "key": "genre", "name": "情报类型", "blurb": "按论文、政策、产品、项目和安全事件浏览" }
+  ],
+  "topics": [
+    { "slug": "ieee", "name": "IEEE", "group": "company", "entityId": "ieee", "definition": "IEEE 在电力、电机、电力电子、控制与标准领域的研究和行业动态。" },
+    { "slug": "iec", "name": "IEC", "group": "company", "entityId": "iec", "definition": "国际电工委员会标准发布、修订计划和合格评定动态。" },
+    { "slug": "epri", "name": "EPRI", "group": "company", "entityId": "epri", "definition": "EPRI 的电力系统研究、示范项目与工程技术报告。" },
+    { "slug": "state-grid", "name": "国家电网", "group": "company", "entityId": "sgcc", "definition": "国家电网的新型电力系统、特高压、数字化和重大工程动态。" },
+    { "slug": "southern-grid", "name": "南方电网", "group": "company", "entityId": "csg", "definition": "南方电网在数字电网、新能源消纳、储能和电力市场方面的工程动态。" },
+    { "slug": "siemens-energy", "name": "Siemens Energy", "group": "company", "entityId": "siemens", "definition": "西门子能源的电网设备、燃机、变压器、数字化和项目动态。" },
+    { "slug": "abb", "name": "ABB", "group": "company", "entityId": "abb", "definition": "ABB 的电气化、自动化、电机驱动和电力电子产品动态。" },
+    { "slug": "ge-vernova", "name": "GE Vernova", "group": "company", "entityId": "gevernova", "definition": "GE Vernova 的电网、风电、发电和电气装备动态。" },
+    { "slug": "hitachi-energy", "name": "Hitachi Energy", "group": "company", "entityId": "hitachi", "definition": "日立能源的高压、变压器、HVDC 和电网自动化动态。" },
+    { "slug": "huawei-digital-power", "name": "华为数字能源", "group": "company", "entityId": "huawei", "definition": "华为数字能源在光储充、数据中心能源与数字电力方面的技术动态。" },
+    { "slug": "sungrow", "name": "阳光电源", "group": "company", "entityId": "sungrow", "definition": "阳光电源的光伏逆变器、储能系统和新能源电站技术动态。" },
+    { "slug": "catl", "name": "宁德时代", "group": "company", "entityId": "catl", "definition": "宁德时代的动力与储能电池、材料体系、安全和产能技术动态。" },
+
+    { "slug": "new-power-system", "name": "新型电力系统", "group": "field", "tags": ["新型电力系统", "电网稳定"], "definition": "高比例新能源条件下的规划、稳定、调度、保护和灵活性资源。" },
+    { "slug": "energy-storage", "name": "储能", "group": "field", "tags": ["电化学储能", "长时储能", "储能安全"], "definition": "储能电芯、系统集成、安全、寿命、并网控制和长时储能路线。" },
+    { "slug": "solar", "name": "光伏", "group": "field", "tags": ["光伏"], "definition": "光伏器件、逆变器、系统设计、并网和产业技术路线。" },
+    { "slug": "wind", "name": "风电", "group": "field", "tags": ["风电"], "definition": "陆上与海上风机、变流器、控制、运维和并网技术。" },
+    { "slug": "power-electronics", "name": "电力电子", "group": "field", "tags": ["电力电子", "构网型变流器", "固态变压器"], "definition": "变流拓扑、构网控制、固态变压器与电力电子装备。" },
+    { "slug": "wide-bandgap", "name": "SiC / GaN", "group": "field", "tags": ["SiC/GaN"], "definition": "宽禁带半导体器件、封装、驱动、可靠性和规模化应用。" },
+    { "slug": "motor-drive", "name": "电机与驱动", "group": "field", "tags": ["电机", "电机驱动"], "definition": "高效电机、牵引、伺服、驱动控制与状态监测。" },
+    { "slug": "smart-grid", "name": "智能电网", "group": "field", "tags": ["智能电网", "虚拟电厂", "微电网", "数字孪生"], "definition": "数字电网、虚拟电厂、微电网、配电自动化和能源管理。" },
+    { "slug": "high-voltage", "name": "高压输电", "group": "field", "tags": ["特高压", "高压绝缘", "变压器", "柔性直流"], "definition": "交直流输电、高压绝缘、变压器、开关设备和试验技术。" },
+
+    { "slug": "papers", "name": "论文研究", "group": "genre", "tags": ["论文/研究"], "definition": "具有明确方法、实验、数据和可复核结论的电气工程研究。" },
+    { "slug": "standards-policy", "name": "标准政策", "group": "genre", "tags": ["政策/标准"], "definition": "标准发布与修订、能源政策、电网规划、市场规则和监管变化。" },
+    { "slug": "product-launches", "name": "产品发布", "group": "genre", "tags": ["产品发布"], "definition": "电气设备、器件、控制软件和系统解决方案的正式发布。" },
+    { "slug": "engineering-projects", "name": "工程项目", "group": "genre", "tags": ["工程项目"], "definition": "投运、示范、扩建、测试和获得可量化结果的工程项目。" },
+    { "slug": "safety", "name": "安全与事故", "group": "genre", "tags": ["事故/安全"], "definition": "电网、储能、设备和工业控制相关事故、调查、风险与防护。" },
+    { "slug": "business", "name": "企业动态", "group": "genre", "tags": ["企业动态", "专利趋势"], "definition": "技术路线、投资扩产、合作并购、供应链和专利趋势。" }
+  ]
+}
