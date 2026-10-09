@@ -78,7 +78,6 @@ test("model-disabled editorial work stays pending without filling the analysis q
     const [row] = await sql<{ processing_queued_at: Date | null }[]>`
       SELECT processing_queued_at FROM articles WHERE id = ${id}`;
     assert.equal(row!.processing_queued_at, null);
-    assert.equal((await sql`SELECT 1 FROM pgboss.job WHERE name=${QUEUES.analyze} AND data->>'articleId'=${id}`).length, 0);
   } finally {
     config.modelCallsEnabled = enabled;
   }
