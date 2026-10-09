@@ -38,7 +38,7 @@ Railway API 服务需要设置 `DATABASE_URL`、`SITE_URL=https://electroradar.v
 
 Railway Worker 服务使用同一个 `DATABASE_URL`、`SITE_URL`、模型密钥和 `COLLECT_ENABLED=true`，启动命令为 `node apps/worker/src/main.ts`，不需要公开端口。API 与 Worker 都必须使用同一数据库，以便 pg-boss 队列和采集结果共享。
 
-`DATABASE_URL` 优先使用 Supabase Direct Connection；如果 Railway 网络仅提供 IPv4，使用 Supabase Session Pooler 的 **5432** 端口。不要使用 Transaction Pooler 的 6543 端口。密码只在 Railway 环境变量中设置，不要写入仓库。
+`DATABASE_URL` 优先使用 Supabase Direct Connection，并带上 `sslmode=require`；如果 Railway 网络仅提供 IPv4，使用 Supabase Session Pooler 的 **5432** 端口。不要使用 Transaction Pooler 的 6543 端口。Worker 会为 pg-boss 使用 libpq 的 `require` 语义建立加密连接。密码只在 Railway 环境变量中设置，不要写入仓库。
 
 Vercel Web 项目只设置 `API_BASE_URL=https://<railway-api-domain>`、`SITE_URL=https://electroradar.vercel.app` 和 `TRUST_PROXY=true`。部署后先访问 `https://<railway-api-domain>/health`，再访问 Vercel 首页；首页的数据链路为 Worker 抓取 → Supabase → API → Web SSR。
 
