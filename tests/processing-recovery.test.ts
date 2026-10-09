@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { after, afterEach, before, test } from "node:test";
 import { closeDb, sql } from "@aihot/backend/db";
+import { config } from "@aihot/backend/config";
 import { groupArticle } from "@aihot/backend/events/group";
 import { upsertMaterial } from "@aihot/backend/content/materials";
 import { rerun } from "@aihot/backend/admin/content";
@@ -67,6 +68,21 @@ async function waitFor(check: () => Promise<boolean>) {
     await delay(20);
   }
 }
+
+test("model-disabled editorial work stays pending without filling the analysis queue", async () => {
+  const id = await article("models-off");
+  const enabled = config.modelCallsEnabled;
+  config.modelCallsEnabled = false;
+  try {
+    assert.equal(await queueProcessing(id, { step: "analyze" }), null);
+    const [row] = await sql<{ processing_queued_at: Date | null }[]>`
+      SELECT processing_queued_at FROM articles WHERE id = ${id}`;
+    assert.equal(row!.processing_queued_at, null);
+    assert.equal((await sql`SELECT 1 FROM pgboss.job WHERE name=${QUEUES.analyze} AND data->>'articleId'=${id}`).length, 0);
+  } finally {
+    config.modelCallsEnabled = enabled;
+  }
+});
 
 test("a failed audit rolls back the receipt release and the processing job", async () => {
   const id = await article("atomic");
