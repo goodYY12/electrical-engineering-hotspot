@@ -254,7 +254,7 @@ test("story changes refresh share images and a withdrawal takes down only the st
   assert.equal((await get(`/api/site/stories/${unrelated}`)).status, 200);
 });
 
-test("a withdrawn item leaves the hot board and the hot APIs at once, not at the next ranking", async () => {
+test("withdrawn reports leave the hot APIs at once and an event disappears after its last public report", async () => {
   const publicId = randomUUID();
   const [story] = await sql<{ id: number }[]>`
     INSERT INTO stories (public_id, title, first_report_at, latest_at) VALUES (${publicId}, ${`HOT-${T}`}, now() - interval '2 hours', now()) RETURNING id`;
@@ -262,7 +262,8 @@ test("a withdrawn item leaves the hot board and the hot APIs at once, not at the
   // Two independent participants (heat counts sources, not reports).
   const second = `${SOURCE}-hot-b`;
   await sql`INSERT INTO sources (id, name, kind, tier, participation_mode, next_fetch_at) VALUES (${second}, 'Test publication B', 'rss', 'T1', 'editorial', '2100-01-01')`;
-  for (const [i, id] of [await article(), await article()].entries()) {
+  const reports = [await article(), await article()];
+  for (const [i, id] of reports.entries()) {
     if (i) await sql`UPDATE articles SET source_id = ${second} WHERE id = ${id}`;
     await sql`INSERT INTO fact_articles (fact_id, article_id, role) VALUES (${fact!.id}, ${id}, 'report')`;
     await sql`INSERT INTO story_signals (story_id, article_id, participant_key, source_id, kind, observed_at)
@@ -279,7 +280,11 @@ test("a withdrawn item leaves the hot board and the hot APIs at once, not at the
 
   await setVisibility(rep!, { visibility: "withdrawn", reason: "test", version: 0 }, "test");
   for (const url of exits) assert.ok(!(await get(url)).body.includes(rep!), `${url} still shows the withdrawn item`);
-  assert.ok(!(await get("/api/site/hot")).body.includes(publicId), "/api/site/hot still shows the event of the withdrawn item");
+  assert.ok((await get("/api/site/hot")).body.includes(publicId), "the event keeps its remaining public report");
+
+  const remaining = reports.find((id) => id !== rep)!;
+  await setVisibility(remaining, { visibility: "withdrawn", reason: "test", version: 0 }, "test");
+  assert.ok(!(await get("/api/site/hot")).body.includes(publicId), "/api/site/hot still shows an event with no public reports");
 });
 
 test("item pages follow one rule: unsummarised editorial items keep one, hot_signal items have none", async () => {
