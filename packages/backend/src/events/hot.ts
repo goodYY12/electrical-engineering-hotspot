@@ -54,10 +54,14 @@ export async function storedHotRanking(db: Db = sql): Promise<HotRanking | null>
   return { id: row.id, computedAt: row.computed_at.toISOString(), ruleVersion: row.rule_version, entries: row.entries, coverage: row.evidence };
 }
 
-export const HOT_RULE_VERSION = "heat-v1-48h-halflife24h";
+export const HOT_RULE_VERSION = "heat-v2-48h-halflife24h-single-source";
 const WINDOW_HOURS = 48;
 const HALF_LIFE_HOURS = 24;
-const MIN_PARTICIPANTS = 2;
+// Electrical engineering sources are naturally fragmented: a standard update or
+// a first-party product release may only appear in one authoritative feed at first.
+// Keep multi-source events ranked ahead of these, but do not hide valid single-source
+// events when the board is filling its Top 10.
+const MIN_PARTICIPANTS = 1;
 
 interface HeatRow {
   story_id: number;
