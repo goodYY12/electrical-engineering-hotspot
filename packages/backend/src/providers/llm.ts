@@ -136,18 +136,22 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
 
   const temperature = opts.temperature ?? 0.2;
   const maxTokens = Math.max(opts.maxTokens ?? 1500, 512) + (spec.reasoningTokens ?? 0);
+  const jsonMode = spec.jsonMode && opts.json !== false;
+  // DeepSeek rejects json_object requests unless a message explicitly mentions JSON. Keep the site's
+  // prompt intact when it already does, and add the provider requirement only for the missing cases.
+  const system = jsonMode && !/json/i.test(opts.system) ? `${opts.system}\n\nReturn exactly one JSON object.`.trim() : opts.system;
   const userText = typeof opts.user === "string" ? opts.user : JSON.stringify(opts.user);
   const body: Record<string, unknown> = {
     model: spec.model,
     messages: [
       // A prompt given as one user message (the title/summary prompts) has no system message.
-      ...(opts.system ? [{ role: "system", content: opts.system }] : []),
+      ...(system ? [{ role: "system", content: system }] : []),
       // Multimodal parts go through as parts; plain objects are sent as JSON text.
       { role: "user", content: typeof opts.user === "string" || Array.isArray(opts.user) ? opts.user : userText },
     ],
     temperature,
     max_tokens: maxTokens,
-    ...(spec.jsonMode && opts.json !== false ? { response_format: { type: "json_object" } } : {}),
+    ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     ...(spec.extra ?? {}),
   };
 
@@ -157,8 +161,8 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
       model: spec.model,
       purpose: opts.purpose,
       subject: opts.subject,
-      identity: { model: spec.model, promptVersion: opts.promptVersion, system: sha256(opts.system), user: sha256(userText), temperature, maxTokens, extra: spec.extra ?? null },
-      requestSummary: { promptVersion: opts.promptVersion, systemHash: sha256(opts.system), userHash: sha256(userText), userChars: userText.length, temperature, maxTokens },
+      identity: { model: spec.model, promptVersion: opts.promptVersion, system: sha256(system), user: sha256(userText), temperature, maxTokens, extra: spec.extra ?? null },
+      requestSummary: { promptVersion: opts.promptVersion, systemHash: sha256(system), userHash: sha256(userText), userChars: userText.length, temperature, maxTokens },
       attemptTag: opts.attemptTag,
     },
     async () => {
