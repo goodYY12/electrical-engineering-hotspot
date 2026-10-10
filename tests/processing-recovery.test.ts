@@ -71,6 +71,7 @@ async function waitFor(check: () => Promise<boolean>) {
 
 test("model-disabled editorial work stays pending without filling the analysis queue", async () => {
   const id = await article("models-off");
+  await getBoss();
   const enabled = config.modelCallsEnabled;
   config.modelCallsEnabled = false;
   try {
