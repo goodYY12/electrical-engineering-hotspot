@@ -25,7 +25,8 @@ const researchType = (text: string): UniversityRadarMetadata["researchType"] => 
 
 export function analyzeUniversityResearch(input: { title: string; body?: string | null; sourceName?: string | null; sourceConfig?: Record<string, unknown> }): UniversityRadarMetadata | null {
   const text = [input.title, input.body ?? "", input.sourceName ?? ""].join(" ");
-  const university = matchUniversity(text);
+  const configuredUniversity = typeof input.sourceConfig?.university === "string" ? matchUniversity(String(input.sourceConfig.university)) : null;
+  const university = matchUniversity(text) ?? configuredUniversity;
   const configured = input.sourceConfig?.universityRadar === true || input.sourceConfig?.category === "university";
   if (!university && !configured) return null;
   const profile = university;

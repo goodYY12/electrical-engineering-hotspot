@@ -477,7 +477,7 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts = {}): 
 }
 
 /** One judgement from the steps: the selection rule, the reader-facing copy and the structure. */
-export function normalizeAnalysis(run: AnalysisRun, article?: Pick<AnalyzeInputArticle, "title" | "bodyText" | "excerpt" | "source">) {
+export function normalizeAnalysis(run: AnalysisRun, article?: Pick<AnalyzeInputArticle, "title" | "author" | "bodyText" | "excerpt" | "source">) {
   const label = run.prefilter.label;
   const titleZh = collapseWhitespace(run.writing?.titleZh ?? "");
   const summaryZh = (run.writing?.summaryZh ?? "").trim();
@@ -500,7 +500,7 @@ export function normalizeAnalysis(run: AnalysisRun, article?: Pick<AnalyzeInputA
   const scoreConfidence = run.scores?.details.map((detail) => detail.confidence).filter((value): value is number => value !== undefined) ?? [];
   const universityRadar = article ? analyzeUniversityResearch({
     title: article.title,
-    body: article.bodyText ?? article.excerpt,
+    body: [article.author, article.bodyText ?? article.excerpt].filter(Boolean).join("\n"),
     sourceName: article.source.name,
     sourceConfig: article.source.config,
   }) : null;
