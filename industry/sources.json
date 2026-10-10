@@ -116,6 +116,15 @@
       "config": { "feedUrl": "https://www.renewableenergyworld.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
       "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
       "tags": ["媒体", "新能源", "电网"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "web-njnu-electrical", "name": "南京师范大学电气科研动态", "category": "university", "kind": "web_list",
+      "config": {
+        "url": "https://www.nnu.edu.cn/", "category": "university", "allowUrlPrefixes": ["https://www.nnu.edu.cn/"],
+        "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "南京师范大学", "新能源", "储能", "智能电网", "电力电子"], "site_fulltext": false, "syndicate_fulltext": false
     }
   ]
 }

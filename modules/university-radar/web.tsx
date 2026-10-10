@@ -8,5 +8,5 @@ function RadarIcon({ size = 18, ...props }: SVGProps<SVGSVGElement> & { size?: n
 export const UNIVERSITY_RADAR_WEB = defineWebModule({
   name: "university-radar",
   sidebar: { section: "内容", items: [{ to: "/university-radar", label: "高校科研雷达", icon: RadarIcon }] },
-  tools: [{ to: "/university-radar", label: "高校科研雷达", icon: <RadarIcon size={18} /> }],
+  tools: [{ to: "/university-radar", label: "高校科研雷达", icon: <RadarIcon size={18} /> }, { to: "/graduation-topics", label: "毕业设计选题", icon: <RadarIcon size={18} /> }],
 });
