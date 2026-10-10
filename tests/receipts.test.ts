@@ -14,7 +14,11 @@ import { autoReleaseUnknownReceipts } from "@aihot/backend/operations/recover";
 
 const usage = { prompt_tokens: 80, completion_tokens: 20, total_tokens: 100 };
 let answer: (hit: number) => string = () => '{"ok":true}';
-const provider = await stub((hit) => ({ id: `stub-${hit}`, choices: [{ message: { content: answer(hit) } }], usage }));
+const requests: string[] = [];
+const provider = await stub((hit, request) => {
+  requests.push(request.body);
+  return { id: `stub-${hit}`, choices: [{ message: { content: answer(hit) } }], usage };
+});
 process.env.DEEPSEEK_BASE_URL = `${provider.url}/v1`;
 process.env.DEEPSEEK_API_KEY = "test-key";
 
@@ -30,6 +34,27 @@ test("the migrations seed a budget for every paid service", async () => {
   const rows = await sql<{ service: string }[]>`SELECT service FROM budgets`;
   const services = new Set(rows.map((r) => r.service));
   for (const s of ["jina", "socialdata", "dajiala", "zhipu", "deepseek", "mimo", "dashscope"]) assert.ok(services.has(s), `no budget for ${s}`);
+});
+
+test("JSON mode makes the JSON requirement explicit for compatible providers", async () => {
+  answer = () => '{"ok":true}';
+  await chatJson({
+    model: "deepseek-flash", purpose: "invariant_test", subject: `json-prompt-${tag()}`, promptVersion: "t1",
+    system: "Use only the supplied material.", user: "plain material", schema: z.object({ ok: z.boolean() }),
+  });
+  const body = JSON.parse(requests.at(-1)!) as { messages: Array<{ role: string; content: string }>; response_format?: { type: string } };
+  assert.equal(body.response_format?.type, "json_object");
+  assert.match(body.messages.map((message) => message.content).join("\n"), /json/i);
+  assert.match(body.messages[0]!.content, /^Use only the supplied material\./);
+});
+
+test("JSON mode unwraps a provider JSON envelope", async () => {
+  answer = () => JSON.stringify({ type: "json_object", content: '{"ok":true}' });
+  const result = await chatJson({
+    model: "deepseek-flash", purpose: "invariant_test", subject: `json-envelope-${tag()}`, promptVersion: "t1",
+    system: "Use only the supplied material.", user: "plain material", schema: z.object({ ok: z.boolean() }),
+  });
+  assert.deepEqual(result.data, { ok: true });
 });
 
 test("an answer already received is reused instead of bought again", async () => {

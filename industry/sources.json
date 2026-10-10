@@ -116,6 +116,27 @@
       "config": { "feedUrl": "https://www.renewableenergyworld.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
       "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
       "tags": ["媒体", "新能源", "电网"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "web-njnu-electrical", "name": "南京师范大学电气与自动化工程学院", "category": "university", "kind": "web_list",
+      "config": {
+        "url": "https://eae.njnu.edu.cn/", "category": "university", "universityRadar": true, "university": "南京师范大学",
+        "allowUrlPrefixes": ["https://eae.njnu.edu.cn/"], "detail": { "maxFetches": 8 },
+        "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "南京师范大学", "电气与自动化", "新能源", "储能", "智能电网", "电力电子"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-njnu-electrical", "name": "Crossref · 南京师范大学电气论文", "category": "university", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.affiliation=Nanjing%20Normal%20University&query.bibliographic=renewable%20energy%20energy%20storage%20power%20electronics%20smart%20grid&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items",
+        "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation"],
+        "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "南京师范大学",
+        "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "论文", "南京师范大学", "新能源", "储能", "智能电网", "电力电子"], "site_fulltext": false, "syndicate_fulltext": false
     }
   ]
 }

@@ -26,6 +26,19 @@ function firstString(obj: unknown, paths: string[] | undefined): string | null {
   return null;
 }
 
+function stringsAt(obj: unknown, paths: string[] | undefined): string[] {
+  const out: string[] = [];
+  for (const path of paths ?? []) {
+    const value = getPath(obj, path);
+    for (const item of Array.isArray(value) ? value : [value]) {
+      const text = typeof item === "string" ? item : item && typeof item === "object" && typeof (item as Record<string, unknown>).name === "string"
+        ? String((item as Record<string, unknown>).name) : null;
+      if (text?.trim() && !out.includes(text.trim())) out.push(text.trim());
+    }
+  }
+  return out;
+}
+
 /** "{path}" → encoded value, "{raw:path}" → raw value. Returns null when a referenced value is missing. */
 export function renderTemplate(template: string, item: unknown): string | null {
   let missing = false;
@@ -183,10 +196,12 @@ export async function fetchJsonList(source: SourceRow): Promise<Candidate[]> {
     const externalId = c.externalIdPath ? getPath(item, c.externalIdPath) : null;
     const summary = firstString(item, c.summaryPaths);
     const summaryIsBody = c.summaryIsBody === true && !!summary;
+    const author = firstString(item, c.authorPaths);
+    const affiliations = stringsAt(item, c.affiliationPaths);
     out.push({
       url,
       title: collapseWhitespace(stripTags(title)),
-      author: firstString(item, c.authorPaths),
+      author: [author, affiliations.length ? `机构：${affiliations.join("、")}` : ""].filter(Boolean).join("；") || null,
       publishedAt: toDate(getPath(item, c.publishedAtPath), c.publishedAtUnit, c.publishedAtUtcOffset),
       excerpt: summary ? collapseWhitespace(stripTags(summary)).slice(0, 2000) : null,
       bodyText: summaryIsBody ? stripTags(summary!) : null,

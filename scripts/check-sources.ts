@@ -7,11 +7,12 @@ import { REPO_ROOT } from "@aihot/backend/config";
 import { assertSupportedConfig } from "@aihot/backend/sources/config-keys";
 import { fetchJsonList } from "@aihot/backend/sources/json-list";
 import { fetchRss } from "@aihot/backend/sources/rss";
+import { fetchWebList } from "@aihot/backend/sources/web-list";
 
 interface Source {
   id: string;
   name: string;
-  kind: "rss" | "json_list";
+  kind: "rss" | "web_list" | "json_list";
   config: Record<string, unknown>;
   participation_mode?: string;
 }
@@ -25,7 +26,9 @@ async function check(source: Source): Promise<void> {
     const input = { ...source, participation_mode: source.participation_mode ?? "editorial", cursor: null } as never;
     const count = source.kind === "rss"
       ? (await fetchRss(input, { force: true })).candidates.length
-      : (await fetchJsonList(input)).length;
+      : source.kind === "web_list"
+        ? (await fetchWebList(input)).length
+        : (await fetchJsonList(input)).length;
     if (count < 1) throw new Error("返回 0 条资料");
     console.log(`✓ ${source.name}: ${count} 条`);
   } catch (error) {
