@@ -48,6 +48,15 @@ test("JSON mode makes the JSON requirement explicit for compatible providers", a
   assert.match(body.messages[0]!.content, /^Use only the supplied material\./);
 });
 
+test("JSON mode unwraps a provider JSON envelope", async () => {
+  answer = () => JSON.stringify({ type: "json_object", content: '{"ok":true}' });
+  const result = await chatJson({
+    model: "deepseek-flash", purpose: "invariant_test", subject: `json-envelope-${tag()}`, promptVersion: "t1",
+    system: "Use only the supplied material.", user: "plain material", schema: z.object({ ok: z.boolean() }),
+  });
+  assert.deepEqual(result.data, { ok: true });
+});
+
 test("an answer already received is reused instead of bought again", async () => {
   answer = () => '{"ok":true}';
   const subject = `reuse-${tag()}`;

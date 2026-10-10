@@ -86,6 +86,12 @@ export class ModelOutputError extends Error {
   }
 }
 
+function unwrapJsonEnvelope(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  return record.type === "json_object" && typeof record.content === "string" ? extractJson(record.content) : value;
+}
+
 function extractJson(text: string): unknown {
   let t = text.trim();
   const fence = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(t);
@@ -95,9 +101,10 @@ function extractJson(text: string): unknown {
   if (start === -1 || end === -1) throw new ModelOutputError("No JSON object in model output");
   const body = t.slice(start, end + 1);
   try {
-    return JSON.parse(body);
+    // DeepSeek may wrap JSON mode content in a provider envelope instead of returning the object directly.
+    return unwrapJsonEnvelope(JSON.parse(body) as unknown);
   } catch {
-    return JSON.parse(escapeControlCharsInStrings(body));
+    return unwrapJsonEnvelope(JSON.parse(escapeControlCharsInStrings(body)) as unknown);
   }
 }
 
