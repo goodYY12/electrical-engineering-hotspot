@@ -5,7 +5,7 @@ import { UNIVERSITY_PROFILES } from "./universities.ts";
 import { generateGraduationTopics, type GraduationTopic } from "./topic-generator.ts";
 
 export interface UniversityResearchItem { id: string; title: string; source: string; discoveredAt: string }
-export interface UniversityRadarEntry { university: string; department: string; articleCount: number; researchDirections: string[]; graduationTopics: string[]; items: UniversityResearchItem[] }
+export interface UniversityRadarEntry { university: string; region: string; department: string; articleCount: number; researchDirections: string[]; graduationTopics: string[]; items: UniversityResearchItem[] }
 export interface UniversityRadarResponse { generatedAt: string; totalArticles: number; entries: UniversityRadarEntry[] }
 export interface GraduationTopicsResponse { generatedAt: string; topics: Array<GraduationTopic & { university: string; department: string }> }
 
@@ -29,15 +29,21 @@ async function readRadar(): Promise<UniversityRadarResponse> {
     ORDER BY p.discovered_at DESC, p.article_id DESC LIMIT 200`;
   const itemsByUniversity = new Map<string, UniversityResearchItem[]>();
   for (const item of items) itemsByUniversity.set(item.university, [...(itemsByUniversity.get(item.university) ?? []), { id: item.id, title: item.title, source: item.source, discoveredAt: item.discovered_at.toISOString() }]);
-  const entries = rows.map((row) => ({ university: row.university, department: row.department, articleCount: Number(row.article_count), researchDirections: (row.directions ?? []).filter(Boolean), graduationTopics: row.graduation_topics ?? [], items: itemsByUniversity.get(row.university) ?? [] }));
-  for (const profile of UNIVERSITY_PROFILES) if (!entries.some((entry) => entry.university === profile.name)) entries.push({ university: profile.name, department: profile.department, articleCount: 0, researchDirections: profile.researchDirections.map((direction) => direction.name), graduationTopics: profile.graduationTopics, items: [] });
+  const entries = rows.map((row) => {
+    const profile = UNIVERSITY_PROFILES.find((university) => university.name === row.university);
+    return { university: row.university, region: profile?.region ?? "其他", department: row.department, articleCount: Number(row.article_count), researchDirections: (row.directions ?? []).filter(Boolean), graduationTopics: row.graduation_topics ?? [], items: itemsByUniversity.get(row.university) ?? [] };
+  });
   entries.sort((a, b) => b.articleCount - a.articleCount || a.university.localeCompare(b.university, "zh-CN"));
   return { generatedAt: now.toISOString(), totalArticles: entries.reduce((sum, entry) => sum + entry.articleCount, 0), entries };
 }
 
 async function readGraduationTopics(): Promise<GraduationTopicsResponse> {
   const now = new Date();
-  const topics = UNIVERSITY_PROFILES.flatMap((profile) => generateGraduationTopics(profile, []).map((topic) => ({ ...topic, university: profile.name, department: profile.department })));
+  const radar = await readRadar();
+  const topics = radar.entries.flatMap((entry) => {
+    const profile = UNIVERSITY_PROFILES.find((university) => university.name === entry.university);
+    return profile ? generateGraduationTopics(profile, entry.researchDirections).map((topic) => ({ ...topic, university: profile.name, department: profile.department })) : [];
+  });
   return { generatedAt: now.toISOString(), topics };
 }
 
