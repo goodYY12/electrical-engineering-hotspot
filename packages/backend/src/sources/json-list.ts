@@ -198,6 +198,8 @@ export async function fetchJsonList(source: SourceRow): Promise<Candidate[]> {
     const summaryIsBody = c.summaryIsBody === true && !!summary;
     const author = firstString(item, c.authorPaths);
     const affiliations = stringsAt(item, c.affiliationPaths);
+    if (Array.isArray(c.affiliationIncludes) && c.affiliationIncludes.length > 0 &&
+      !affiliations.some((affiliation) => c.affiliationIncludes.some((needle: unknown) => typeof needle === "string" && affiliation.toLowerCase().includes(needle.toLowerCase())))) continue;
     out.push({
       url,
       title: collapseWhitespace(stripTags(title)),

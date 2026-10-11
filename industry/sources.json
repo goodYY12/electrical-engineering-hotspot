@@ -131,7 +131,7 @@
       "id": "json-crossref-njnu-electrical", "name": "Crossref · 南京师范大学电气论文", "category": "university", "kind": "json_list",
       "config": {
         "url": "https://api.crossref.org/works?query.affiliation=Nanjing%20Normal%20University&query.bibliographic=renewable%20energy%20energy%20storage%20power%20electronics%20smart%20grid&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items",
-        "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation"],
+        "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation", "author.1.affiliation", "author.2.affiliation", "author.3.affiliation", "author.4.affiliation"], "affiliationIncludes": ["Nanjing Normal University", "Nanjing Normal Univ", "南京师范大学"],
         "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "南京师范大学",
         "_aihot": { "initialBackfillLimit": 12 }
       },
