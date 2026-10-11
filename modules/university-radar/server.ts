@@ -17,7 +17,7 @@ async function readRadar(): Promise<UniversityRadarResponse> {
       array_agg(DISTINCT topic->>'title') FILTER (WHERE topic->>'title' IS NOT NULL) AS graduation_topics
     FROM publications p JOIN analyses an ON an.id = p.analysis_id
     LEFT JOIN LATERAL jsonb_array_elements(coalesce(an.output->'universityRadar'->'graduationTopics', '[]'::jsonb)) topic ON true
-    WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 180 * 86_400_000)}
+    WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 365 * 86_400_000)}
       AND an.output ? 'universityRadar'
     GROUP BY an.output->'universityRadar'->>'university', an.output->'universityRadar'->>'department'`;
   const entries = rows.map((row) => ({ university: row.university, department: row.department, articleCount: Number(row.article_count), researchDirections: (row.directions ?? []).filter(Boolean), graduationTopics: row.graduation_topics ?? [] }));
