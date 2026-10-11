@@ -15,6 +15,20 @@ ElectroRadar 是一个面向电气工程师、科研人员和行业决策者的�
 - 自动任务：信源按小时至少检查一次；自动清洗、去重、分析、事件聚合、热度快照和成刊。
 - Agent 接入：公开 API、RSS、MCP、Agent Markdown 和 `llms.txt`。
 
+### 高校科研雷达
+
+University Radar 是 ElectroRadar 的高校科研模块。它从 Crossref 按作者机构匹配中国高校电气工程论文，并把结果写入现有文章分析 JSON 的 `universityRadar` 节点，不增加数据库表。
+
+- 页面：<https://electroradar.vercel.app/university-radar>
+- API：<https://electroradar-api-production.up.railway.app/api/university-radar>
+- 当前覆盖 20 所高校，南京师范大学、清华大学、重庆大学、南京航空航天大学和南京理工大学使用重点 profile。
+- 页面只显示数据库中已经采集到的真实条目；点击学校卡片下的科研动态可以打开文章详情。
+- 支持学校、地区和研究方向筛选，毕设推荐只根据真实高校科研条目生成。
+
+数据链路是：`Crossref affiliation → 采集与 DOI 去重 → 现有 analyzer → analyses.output.universityRadar → 高校雷达 API → 页面与毕设推荐`。
+
+部署、验证结果和后续扩展记录见 [docs/university-radar.md](docs/university-radar.md)。
+
 ## 数据源
 
 默认配置只使用无需密钥且已验证可访问的公开接口，包括 IEEE Spectrum、美国能源部、Federal Register、GE Vernova、arXiv、Crossref（IEEE、ScienceDirect、Springer）、Power Electronics News、Energy-Storage.news、ESS News、pv magazine、PV Tech、POWER Magazine、Utility Dive 和 Renewable Energy World。
