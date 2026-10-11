@@ -16,9 +16,13 @@ test("南京师范大学论文 affiliation 生成高校科研 metadata", () => {
   assert.ok(metadata);
   assert.equal(metadata.isUniversityResearch, true);
   assert.equal(metadata.university, "南京师范大学");
+  assert.equal(metadata.region, "江苏");
   assert.equal(metadata.department, "电气与自动化工程学院");
+  assert.ok(["新能源电力系统", "储能"].some((direction) => metadata.direction.includes(direction)));
   assert.equal(metadata.researchType, "论文");
   assert.ok(metadata.keywords.includes("新能源"));
+  assert.deepEqual(metadata.technologyKeywords, metadata.keywords);
+  assert.equal(metadata.score, metadata.graduationScore);
 });
 
 test("南京师范大学高校源和 Crossref 源均能通过配置校验", () => {

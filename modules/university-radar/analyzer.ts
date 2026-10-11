@@ -5,12 +5,16 @@ import { matchUniversity, type UniversityProfile } from "./universities.ts";
 export interface UniversityRadarMetadata {
   isUniversityResearch: true;
   university: string;
+  region: string;
   department: string;
+  direction: string;
   researchDirection: string;
   keywords: string[];
+  technologyKeywords: string[];
   researchType: "论文" | "项目" | "成果" | "新闻";
   graduationPossible: boolean;
   graduationScore: number;
+  score: number;
   difficulty: "easy" | "medium" | "hard";
   graduationTopics: GraduationTopic[];
 }
@@ -35,15 +39,20 @@ export function analyzeUniversityResearch(input: { title: string; body?: string 
   const keywords = matchedKeywords(text, profile);
   const topics = generateGraduationTopics(profile, directions);
   const score = Math.min(100, 45 + directions.length * 12 + Math.min(20, keywords.length * 3));
+  const direction = directions.join("、") || profile.researchDirections[0]?.name || "新能源电力系统";
   return {
     isUniversityResearch: true,
     university: profile.name,
+    region: profile.region,
     department: profile.department,
-    researchDirection: directions.join("、") || profile.researchDirections[0]?.name || "电气工程",
+    direction,
+    researchDirection: direction,
     keywords,
+    technologyKeywords: keywords,
     researchType: researchType(text),
     graduationPossible: keywords.length >= 1,
     graduationScore: score,
+    score,
     difficulty: topics[0]?.difficulty ?? "medium",
     graduationTopics: topics,
   };
