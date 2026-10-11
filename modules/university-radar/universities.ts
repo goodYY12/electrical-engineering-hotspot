@@ -53,6 +53,15 @@ export const UNIVERSITY_PROFILES: readonly UniversityProfile[] = [
   profile("河海大学", "Hohai University", "江苏", "能源与电气学院", ["河海", "HHU"]),
   profile("南京航空航天大学", "Nanjing University of Aeronautics and Astronautics", "江苏", "自动化学院", ["南航", "NUAA"], ["新能源电力系统", "储能", "电力电子", "电机驱动", "控制"], ["基于Simulink的航空电源变换器控制策略研究", "基于MATLAB的无人机电机驱动系统建模与仿真"]),
   profile("南京理工大学", "Nanjing University of Science and Technology", "江苏", "自动化学院", ["南理工", "NJUST"], ["储能", "电力电子", "电机驱动", "智能电网", "控制"], ["基于MATLAB的永磁电机驱动控制策略研究", "基于Python的储能微电网能量管理优化研究"]),
+  profile("南京大学", "Nanjing University", "江苏", "现代工程与应用科学学院", ["南大", "NJU"]),
+  profile("苏州大学", "Soochow University", "江苏", "机电工程学院", ["苏大", "SZU"], ["新能源电力系统", "储能", "电力电子", "控制"]),
+  profile("江苏大学", "Jiangsu University", "江苏", "电气信息工程学院", ["江大", "UJS"], ["新能源电力系统", "储能", "电力电子", "电机驱动", "控制"]),
+  profile("南京工业大学", "Nanjing Tech University", "江苏", "电气工程与控制科学学院", ["南工大", "NJTech"], ["新能源电力系统", "储能", "电力电子", "智能电网", "控制"]),
+  profile("中国矿业大学", "China University of Mining and Technology", "江苏", "信息与控制工程学院", ["矿大", "CUMT"], ["新能源电力系统", "储能", "智能电网", "控制"]),
+  profile("南京邮电大学", "Nanjing University of Posts and Telecommunications", "江苏", "自动化学院", ["南邮", "NJUPT"], ["电力电子", "智能电网", "控制"]),
+  profile("江苏科技大学", "Jiangsu University of Science and Technology", "江苏", "电子信息学院", ["江苏科大", "JUST"], ["新能源电力系统", "电力电子", "电机驱动", "控制"]),
+  profile("常州大学", "Changzhou University", "江苏", "电气信息工程学院", ["常大", "CCZU"], ["新能源电力系统", "储能", "电力电子", "控制"]),
+  profile("扬州大学", "Yangzhou University", "江苏", "电气与能源动力工程学院", ["扬大", "YZU"], ["新能源电力系统", "储能", "智能电网", "控制"]),
 ];
 
 export const UNIVERSITY_BY_ALIAS = new Map(UNIVERSITY_PROFILES.flatMap((university) => university.aliases.map((alias) => [alias.toLowerCase(), university] as const)));

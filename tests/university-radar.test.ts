@@ -4,8 +4,8 @@ import { analyzeUniversityResearch } from "../modules/university-radar/analyzer.
 import { matchResearchDirections } from "../modules/university-radar/keywords.ts";
 import { UNIVERSITY_PROFILES, matchUniversity } from "../modules/university-radar/universities.ts";
 
-test("高校画像覆盖首批 20 所高校，并能识别南京师范大学别名", () => {
-  assert.equal(UNIVERSITY_PROFILES.length, 20);
+test("高校画像覆盖首批高校，并能识别南京师范大学别名", () => {
+  assert.equal(UNIVERSITY_PROFILES.length, 29);
   assert.equal(matchUniversity("NNU 电气与自动化工程学院" )?.name, "南京师范大学");
 });
 

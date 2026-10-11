@@ -36,9 +36,9 @@ test("南京师范大学高校源和 Crossref 源均能通过配置校验", () =
   }
 });
 
-test("20 所高校都有地区、Crossref P0 和受控研究方向", () => {
-  assert.equal(UNIVERSITY_PROFILES.length, 20);
-  assert.equal(UNIVERSITY_CROSSREF_SOURCES.length, 20);
+test("高校都有地区、Crossref P0 和受控研究方向", () => {
+  assert.equal(UNIVERSITY_PROFILES.length, 29);
+  assert.equal(UNIVERSITY_CROSSREF_SOURCES.length, 29);
   assert.equal(UNIVERSITY_OFFICIAL_SOURCES.length, 5);
   for (const university of UNIVERSITY_PROFILES) {
     assert.ok(university.region);
