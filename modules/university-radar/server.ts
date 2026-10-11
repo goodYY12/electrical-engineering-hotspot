@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { sql } from "@aihot/backend/db";
 import { defineServerModule } from "@aihot/backend/modules";
-import { selectedCondition } from "@aihot/backend/publication/scope";
 import { UNIVERSITY_PROFILES } from "./universities.ts";
 import { generateGraduationTopics, type GraduationTopic } from "./topic-generator.ts";
 
@@ -18,7 +17,8 @@ async function readRadar(): Promise<UniversityRadarResponse> {
       array_agg(DISTINCT topic->>'title') FILTER (WHERE topic->>'title' IS NOT NULL) AS graduation_topics
     FROM publications p JOIN analyses an ON an.id = p.analysis_id
     LEFT JOIN LATERAL jsonb_array_elements(coalesce(an.output->'universityRadar'->'graduationTopics', '[]'::jsonb)) topic ON true
-    WHERE ${selectedCondition(now)} AND an.output ? 'universityRadar'
+    WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 180 * 86_400_000)}
+      AND an.output ? 'universityRadar'
     GROUP BY an.output->'universityRadar'->>'university', an.output->'universityRadar'->>'department'`;
   const entries = rows.map((row) => ({ university: row.university, department: row.department, articleCount: Number(row.article_count), researchDirections: (row.directions ?? []).filter(Boolean), graduationTopics: row.graduation_topics ?? [] }));
   for (const profile of UNIVERSITY_PROFILES) if (!entries.some((entry) => entry.university === profile.name)) entries.push({ university: profile.name, department: profile.department, articleCount: 0, researchDirections: profile.researchDirections.map((direction) => direction.name), graduationTopics: profile.graduationTopics });
