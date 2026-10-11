@@ -11,7 +11,7 @@ test("高校画像覆盖首批 20 所高校，并能识别南京师范大学别�
 
 test("南京师范大学科研关键词映射到研究方向", () => {
   const university = matchUniversity("南京师范大学")!;
-  assert.deepEqual(matchResearchDirections("南京师范大学 光伏 储能 微电网", university), ["新能源电力系统"]);
+  assert.deepEqual(matchResearchDirections("南京师范大学 光伏 储能 微电网", university), ["新能源电力系统", "储能"]);
   assert.deepEqual(matchResearchDirections("南京师范大学 逆变器 PWM 电能质量", university), ["电力电子"]);
 });
 

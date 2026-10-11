@@ -1,5 +1,5 @@
 {
-  "$comment": "ElectroRadar 默认信源均为无需密钥的公开 RSS/Atom/JSON。首次启动导入；全文默认关闭，只展示摘要和原文链接。",
+  "$comment": "ElectroRadar 默认信源均为无需密钥的公开 RSS/Atom/JSON。高校 P0/P1 信源由 modules/university-radar/sources.ts 与本文件合并导入；全文默认关闭，只展示摘要和原文链接。",
   "sources": [
     {
       "id": "rss-ieee-spectrum", "name": "IEEE Spectrum", "kind": "rss",

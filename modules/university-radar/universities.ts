@@ -1,78 +1,58 @@
+export const UNIVERSITY_DIRECTIONS = ["新能源电力系统", "储能", "电力电子", "电机驱动", "智能电网", "控制"] as const;
+
 export interface UniversityProfile {
   name: string;
   englishName: string;
   aliases: string[];
+  region: string;
   department: string;
   researchDirections: Array<{ name: string; keywords: string[] }>;
   graduationTopics: string[];
 }
 
-const commonDirections = ["新能源电力系统", "智能电网", "电力电子", "自动控制"];
+const commonKeywords: Record<(typeof UNIVERSITY_DIRECTIONS)[number], string[]> = {
+  新能源电力系统: ["新能源", "光伏", "风电", "微电网", "综合能源"],
+  储能: ["储能", "电池", "能量管理", "SOC"],
+  电力电子: ["电力电子", "逆变器", "变流器", "PWM", "SiC", "GaN"],
+  电机驱动: ["电机驱动", "电气传动", "永磁电机", "电机控制"],
+  智能电网: ["智能电网", "能源互联网", "配电网", "优化调度"],
+  控制: ["控制", "预测控制", "优化控制", "智能控制"],
+};
 
-const profile = (name: string, englishName: string, department: string, aliases: string[] = [name]): UniversityProfile => ({
-  name, englishName, aliases, department,
-  researchDirections: commonDirections.map((direction) => ({ name: direction, keywords: [direction, "新能源", "储能", "智能电网", "电力电子", "控制"] })),
-  graduationTopics: [
+const profile = (name: string, englishName: string, region: string, department: string, aliases: string[] = [], directions: readonly (typeof UNIVERSITY_DIRECTIONS)[number][] = UNIVERSITY_DIRECTIONS, graduationTopics?: string[]): UniversityProfile => ({
+  name,
+  englishName,
+  aliases: [...new Set([name, englishName, ...aliases])],
+  region,
+  department,
+  researchDirections: directions.map((direction) => ({ name: direction, keywords: commonKeywords[direction] })),
+  graduationTopics: graduationTopics ?? [
     `基于MATLAB/Simulink的${name}新能源系统仿真研究`,
     `基于Python的${name}智能电网运行数据分析`,
   ],
 });
 
-const focusedProfile = (name: string, englishName: string, department: string, aliases: string[], researchDirections: Array<{ name: string; keywords: string[] }>, graduationTopics: string[]): UniversityProfile => ({
-  name, englishName, aliases, department, researchDirections, graduationTopics,
-});
-
 export const UNIVERSITY_PROFILES: readonly UniversityProfile[] = [
-  {
-    name: "南京师范大学", englishName: "Nanjing Normal University", aliases: ["南京师范大学", "南师大", "NNU"], department: "电气与自动化工程学院",
-    researchDirections: [
-      { name: "新能源电力系统", keywords: ["新能源", "光伏", "风电", "储能", "微电网", "综合能源"] },
-      { name: "智能电网", keywords: ["智能电网", "能源互联网", "配电网", "优化调度"] },
-      { name: "电力电子", keywords: ["逆变器", "变流器", "PWM", "电能质量"] },
-      { name: "自动控制", keywords: ["预测控制", "优化控制", "人工智能"] },
-    ],
-    graduationTopics: [
-      "基于MATLAB的光伏储能系统能量管理策略研究",
-      "基于Simulink的微电网并离网控制策略仿真",
-      "基于Python的配电网优化调度方法研究",
-      "基于MATLAB的逆变器电能质量控制研究",
-    ],
-  },
-  focusedProfile("清华大学", "Tsinghua University", "电机工程与应用电子技术系", ["清华大学", "清华", "Tsinghua"], [
-    { name: "新型电力系统", keywords: ["新型电力系统", "新能源", "储能", "电网规划"] },
-    { name: "电力电子与电机", keywords: ["电力电子", "电机", "变流器", "宽禁带半导体"] },
-    { name: "智能电网", keywords: ["智能电网", "配电网", "优化调度", "人工智能"] },
-  ], ["基于MATLAB/Simulink的新型电力系统储能协同控制研究", "基于Python的配电网灵活性评估与优化调度"]),
-  profile("西安交通大学", "Xi'an Jiaotong University", "电气工程学院", ["西安交通大学", "西安交大", "XJTU"]),
-  profile("华中科技大学", "Huazhong University of Science and Technology", "电气与电子工程学院", ["华中科技大学", "华中科大", "HUST"]),
-  profile("浙江大学", "Zhejiang University", "电气工程学院", ["浙江大学", "浙大", "ZJU"]),
-  profile("上海交通大学", "Shanghai Jiao Tong University", "电子信息与电气工程学院", ["上海交通大学", "上交", "SJTU"]),
-  profile("华北电力大学", "North China Electric Power University", "电气与电子工程学院", ["华北电力大学", "华电", "NCEPU"]),
-  focusedProfile("重庆大学", "Chongqing University", "电气工程学院", ["重庆大学", "重大", "CQU"], [
-    { name: "新能源电力系统", keywords: ["新能源", "风电", "光伏", "储能", "微电网"] },
-    { name: "高电压与绝缘", keywords: ["高电压", "绝缘", "局部放电", "输电"] },
-    { name: "智能电网", keywords: ["智能电网", "配电网", "故障诊断", "优化调度"] },
-  ], ["基于Simulink的风光储微电网协调控制研究", "基于Python的配电网故障诊断方法研究"]),
-  profile("山东大学", "Shandong University", "电气工程学院", ["山东大学", "山大", "SDU"]),
-  profile("天津大学", "Tianjin University", "电气自动化与信息工程学院", ["天津大学", "天大", "TJU"]),
-  profile("东南大学", "Southeast University", "电气工程学院", ["东南大学", "东大", "SEU"]),
-  profile("哈尔滨工业大学", "Harbin Institute of Technology", "电气工程及自动化学院", ["哈尔滨工业大学", "哈工大", "HIT"]),
-  profile("四川大学", "Sichuan University", "电气工程学院", ["四川大学", "川大", "SCU"]),
-  profile("武汉大学", "Wuhan University", "电气与自动化学院", ["武汉大学", "武大", "WHU"]),
-  profile("湖南大学", "Hunan University", "电气与信息工程学院", ["湖南大学", "湖大", "HNU"]),
-  profile("电子科技大学", "University of Electronic Science and Technology of China", "机械与电气工程学院", ["电子科技大学", "电子科大", "UESTC"]),
-  profile("合肥工业大学", "Hefei University of Technology", "电气与自动化工程学院", ["合肥工业大学", "合工大", "HFUT"]),
-  profile("河海大学", "Hohai University", "能源与电气学院", ["河海大学", "河海", "HHU"]),
-  focusedProfile("南京航空航天大学", "Nanjing University of Aeronautics and Astronautics", "自动化学院", ["南京航空航天大学", "南航", "NUAA"], [
-    { name: "航空电气与电力电子", keywords: ["航空电气", "电力电子", "电机驱动", "逆变器"] },
-    { name: "新能源电力系统", keywords: ["新能源", "储能", "微电网", "综合能源"] },
-    { name: "自动控制", keywords: ["自动控制", "预测控制", "飞控", "智能控制"] },
-  ], ["基于Simulink的航空电源变换器控制策略研究", "基于MATLAB的无人机电机驱动系统建模与仿真"]),
-  focusedProfile("南京理工大学", "Nanjing University of Science and Technology", "自动化学院", ["南京理工大学", "南理工", "NJUST"], [
-    { name: "电力电子与电机驱动", keywords: ["电力电子", "电机驱动", "逆变器", "PWM"] },
-    { name: "智能电网", keywords: ["智能电网", "储能", "微电网", "能量管理"] },
-    { name: "自动控制", keywords: ["自动控制", "鲁棒控制", "优化控制", "人工智能"] },
-  ], ["基于MATLAB的永磁电机驱动控制策略研究", "基于Python的储能微电网能量管理优化研究"]),
+  profile("南京师范大学", "Nanjing Normal University", "江苏", "电气与自动化工程学院", ["南师大", "NNU"], ["新能源电力系统", "储能", "电力电子", "智能电网", "控制"], ["基于MATLAB的光伏储能系统能量管理策略研究", "基于Simulink的微电网并离网控制策略仿真", "基于Python的配电网优化调度方法研究", "基于MATLAB的逆变器电能质量控制研究"]),
+  profile("清华大学", "Tsinghua University", "北京", "电机工程与应用电子技术系", ["清华", "Tsinghua"], ["新能源电力系统", "储能", "电力电子", "电机驱动", "智能电网"], ["基于MATLAB/Simulink的新型电力系统储能协同控制研究", "基于Python的配电网灵活性评估与优化调度"]),
+  profile("西安交通大学", "Xi'an Jiaotong University", "陕西", "电气工程学院", ["西安交大", "XJTU"]),
+  profile("华中科技大学", "Huazhong University of Science and Technology", "湖北", "电气与电子工程学院", ["华中科大", "HUST"]),
+  profile("浙江大学", "Zhejiang University", "浙江", "电气工程学院", ["浙大", "ZJU"]),
+  profile("上海交通大学", "Shanghai Jiao Tong University", "上海", "电子信息与电气工程学院", ["上交", "SJTU"]),
+  profile("华北电力大学", "North China Electric Power University", "北京", "电气与电子工程学院", ["华电", "NCEPU"]),
+  profile("重庆大学", "Chongqing University", "重庆", "电气工程学院", ["重大", "CQU"], ["新能源电力系统", "储能", "智能电网", "控制"], ["基于Simulink的风光储微电网协调控制研究", "基于Python的配电网故障诊断方法研究"]),
+  profile("山东大学", "Shandong University", "山东", "电气工程学院", ["山大", "SDU"]),
+  profile("天津大学", "Tianjin University", "天津", "电气自动化与信息工程学院", ["天大", "TJU"]),
+  profile("东南大学", "Southeast University", "江苏", "电气工程学院", ["东大", "SEU"]),
+  profile("哈尔滨工业大学", "Harbin Institute of Technology", "黑龙江", "电气工程及自动化学院", ["哈工大", "HIT"]),
+  profile("四川大学", "Sichuan University", "四川", "电气工程学院", ["川大", "SCU"]),
+  profile("武汉大学", "Wuhan University", "湖北", "电气与自动化学院", ["武大", "WHU"]),
+  profile("湖南大学", "Hunan University", "湖南", "电气与信息工程学院", ["湖大", "HNU"]),
+  profile("电子科技大学", "University of Electronic Science and Technology of China", "四川", "机械与电气工程学院", ["电子科大", "UESTC"]),
+  profile("合肥工业大学", "Hefei University of Technology", "安徽", "电气与自动化工程学院", ["合工大", "HFUT"]),
+  profile("河海大学", "Hohai University", "江苏", "能源与电气学院", ["河海", "HHU"]),
+  profile("南京航空航天大学", "Nanjing University of Aeronautics and Astronautics", "江苏", "自动化学院", ["南航", "NUAA"], ["新能源电力系统", "储能", "电力电子", "电机驱动", "控制"], ["基于Simulink的航空电源变换器控制策略研究", "基于MATLAB的无人机电机驱动系统建模与仿真"]),
+  profile("南京理工大学", "Nanjing University of Science and Technology", "江苏", "自动化学院", ["南理工", "NJUST"], ["储能", "电力电子", "电机驱动", "智能电网", "控制"], ["基于MATLAB的永磁电机驱动控制策略研究", "基于Python的储能微电网能量管理优化研究"]),
 ];
 
 export const UNIVERSITY_BY_ALIAS = new Map(UNIVERSITY_PROFILES.flatMap((university) => university.aliases.map((alias) => [alias.toLowerCase(), university] as const)));
