@@ -29,9 +29,17 @@ async function readRadar(): Promise<UniversityRadarResponse> {
     ORDER BY p.discovered_at DESC, p.article_id DESC LIMIT 200`;
   const itemsByUniversity = new Map<string, UniversityResearchItem[]>();
   for (const item of items) itemsByUniversity.set(item.university, [...(itemsByUniversity.get(item.university) ?? []), { id: item.id, title: item.title, source: item.source, discoveredAt: item.discovered_at.toISOString() }]);
-  const entries = rows.map((row) => {
-    const profile = UNIVERSITY_PROFILES.find((university) => university.name === row.university);
-    return { university: row.university, region: profile?.region ?? "其他", department: row.department, articleCount: Number(row.article_count), researchDirections: (row.directions ?? []).filter(Boolean), graduationTopics: row.graduation_topics ?? [], items: itemsByUniversity.get(row.university) ?? [] };
+  const entries = UNIVERSITY_PROFILES.map((profile) => {
+    const row = rows.find((candidate) => candidate.university === profile.name);
+    return {
+      university: profile.name,
+      region: profile.region,
+      department: row?.department ?? profile.department,
+      articleCount: Number(row?.article_count ?? 0),
+      researchDirections: row ? (row.directions ?? []).filter(Boolean) : profile.researchDirections.map((direction) => direction.name),
+      graduationTopics: row?.graduation_topics ?? [],
+      items: itemsByUniversity.get(profile.name) ?? [],
+    };
   });
   entries.sort((a, b) => b.articleCount - a.articleCount || a.university.localeCompare(b.university, "zh-CN"));
   return { generatedAt: now.toISOString(), totalArticles: entries.reduce((sum, entry) => sum + entry.articleCount, 0), entries };
