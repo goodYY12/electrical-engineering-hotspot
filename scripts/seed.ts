@@ -37,7 +37,7 @@ for (const s of sources) {
   added += inserted.length;
   // Keep the first university source pointed at the real college site on existing deployments.
   // Other sources remain admin-owned and are never overwritten by a seed run.
-  if (s.id === "web-njnu-electrical") {
+  if (s.id === "web-njnu-electrical" || s.id === "json-crossref-njnu-electrical") {
     await sql`UPDATE sources SET name = ${s.name}, kind = ${s.kind}, config = ${sql.json(s.config as never)}, tags = ${s.tags ?? []}, interval_minutes = ${s.interval_minutes ?? 60}, next_fetch_at = now(), updated_at = now()
       WHERE id = ${s.id} AND config->>'category' = 'university'`;
   }
