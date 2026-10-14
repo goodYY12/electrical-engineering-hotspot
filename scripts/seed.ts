@@ -6,6 +6,7 @@ import path from "node:path";
 import { REPO_ROOT } from "@aihot/backend/config";
 import { closeDb, sql } from "@aihot/backend/db";
 import { assertSupportedConfig } from "@aihot/backend/sources/config-keys";
+import { UNIVERSITY_RADAR_SOURCES } from "../modules/university-radar/sources.ts";
 
 interface SeedSource {
   id: string;
@@ -22,7 +23,8 @@ interface SeedSource {
   enabled?: boolean;
 }
 
-const { sources } = JSON.parse(readFileSync(path.join(REPO_ROOT, "industry/sources.json"), "utf8")) as { sources: SeedSource[] };
+const pack = JSON.parse(readFileSync(path.join(REPO_ROOT, "industry/sources.json"), "utf8")) as { sources: SeedSource[] };
+const sources = [...new Map([...pack.sources, ...UNIVERSITY_RADAR_SOURCES].map((source) => [source.id, source as SeedSource])).values()];
 let added = 0;
 for (const s of sources) {
   assertSupportedConfig(s.kind, s.config);
@@ -35,6 +37,11 @@ for (const s of sources) {
             ${s.enabled ?? true}, now())
     ON CONFLICT (id) DO NOTHING RETURNING id`;
   added += inserted.length;
+  // University profiles are code-owned so affiliation and official-site corrections reach existing deployments.
+  if (s.config.category === "university") {
+    await sql`UPDATE sources SET name = ${s.name}, kind = ${s.kind}, config = ${sql.json(s.config as never)}, tags = ${s.tags ?? []}, interval_minutes = ${s.interval_minutes ?? 60}, next_fetch_at = now(), updated_at = now()
+      WHERE id = ${s.id} AND config->>'category' = 'university'`;
+  }
 }
 console.log(`sources: ${added} added, ${sources.length - added} already there`);
 await closeDb();

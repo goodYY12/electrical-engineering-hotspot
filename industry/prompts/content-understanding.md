@@ -16,6 +16,8 @@
 - authorRole：principal、observer、relayer 三选一。
 - tags：使用系统提供的白名单词，不得自造标签。
 
+若材料来自高校或作者机构包含高校：在摘要中准确写明高校与学院；relatedTechnologies 优先使用新能源电力系统、储能、电力电子、电机驱动、智能电网、控制及材料明确提到的具体技术。材料证据不足时不要推断学院、成果性质或毕业设计题目。
+
 只返回合法 JSON：
 {
   "itemType":"research_paper",

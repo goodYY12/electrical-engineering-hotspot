@@ -1,0 +1,19 @@
+FROM node:24-trixie-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/worker/package.json apps/worker/
+COPY apps/web/package.json apps/web/
+COPY packages/backend/package.json packages/backend/
+COPY packages/contracts/package.json packages/contracts/
+COPY industry/package.json industry/
+COPY site/package.json site/
+RUN npm ci --omit=dev --no-audit --no-fund
+COPY . .
+
+FROM node:24-trixie-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app /app
+USER node
+CMD ["node", "apps/worker/src/main.ts"]

@@ -1,5 +1,5 @@
 {
-  "$comment": "ElectroRadar 默认信源均为无需密钥的公开 RSS/Atom/JSON。首次启动导入；全文默认关闭，只展示摘要和原文链接。",
+  "$comment": "ElectroRadar 默认信源均为无需密钥的公开 RSS/Atom/JSON。高校 P0/P1 信源由 modules/university-radar/sources.ts 与本文件合并导入；全文默认关闭，只展示摘要和原文链接。",
   "sources": [
     {
       "id": "rss-ieee-spectrum", "name": "IEEE Spectrum", "kind": "rss",
@@ -116,6 +116,59 @@
       "config": { "feedUrl": "https://www.renewableenergyworld.com/feed/", "_aihot": { "initialBackfillLimit": 12 } },
       "tier": "T2", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
       "tags": ["媒体", "新能源", "电网"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "web-njnu-electrical", "name": "南京师范大学电气与自动化工程学院", "category": "university", "kind": "web_list",
+      "config": {
+        "url": "https://eae.njnu.edu.cn/", "category": "university", "universityRadar": true, "university": "南京师范大学",
+        "allowUrlPrefixes": ["https://eae.njnu.edu.cn/"], "detail": { "maxFetches": 8 },
+        "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "南京师范大学", "电气与自动化", "新能源", "储能", "智能电网", "电力电子"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-njnu-electrical", "name": "Crossref · 南京师范大学电气论文", "category": "university", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.affiliation=Nanjing%20Normal%20University&query.bibliographic=renewable%20energy%20energy%20storage%20power%20electronics%20smart%20grid&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items",
+        "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation", "author.1.affiliation", "author.2.affiliation", "author.3.affiliation", "author.4.affiliation"], "affiliationIncludes": ["Nanjing Normal University", "Nanjing Normal Univ", "南京师范大学"],
+        "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "南京师范大学",
+        "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "论文", "南京师范大学", "新能源", "储能", "智能电网", "电力电子"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-tsinghua-electrical", "name": "Crossref · 清华大学电气论文", "category": "university", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.affiliation=Tsinghua%20University&query.bibliographic=power%20system%20energy%20storage%20power%20electronics&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation", "author.1.affiliation", "author.2.affiliation", "author.3.affiliation", "author.4.affiliation"], "affiliationIncludes": ["Tsinghua University", "清华大学"], "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "清华大学", "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "论文", "清华大学", "新型电力系统", "储能", "电力电子"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-cqu-electrical", "name": "Crossref · 重庆大学电气论文", "category": "university", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.affiliation=Chongqing%20University&query.bibliographic=renewable%20energy%20energy%20storage%20smart%20grid&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation", "author.1.affiliation", "author.2.affiliation", "author.3.affiliation", "author.4.affiliation"], "affiliationIncludes": ["Chongqing University", "重庆大学"], "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "重庆大学", "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "论文", "重庆大学", "新能源", "高电压", "智能电网"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-nuaa-electrical", "name": "Crossref · 南京航空航天大学电气论文", "category": "university", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.affiliation=Nanjing%20University%20of%20Aeronautics%20and%20Astronautics&query.bibliographic=power%20electronics%20motor%20drive%20energy%20storage&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation", "author.1.affiliation", "author.2.affiliation", "author.3.affiliation", "author.4.affiliation"], "affiliationIncludes": ["Nanjing University of Aeronautics and Astronautics", "NUAA", "南京航空航天大学"], "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "南京航空航天大学", "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "论文", "南京航空航天大学", "航空电气", "电力电子", "电机驱动"], "site_fulltext": false, "syndicate_fulltext": false
+    },
+    {
+      "id": "json-crossref-njust-electrical", "name": "Crossref · 南京理工大学电气论文", "category": "university", "kind": "json_list",
+      "config": {
+        "url": "https://api.crossref.org/works?query.affiliation=Nanjing%20University%20of%20Science%20and%20Technology&query.bibliographic=power%20electronics%20motor%20drive%20smart%20grid&filter=type:journal-article&sort=published&order=desc&rows=20&select=DOI,title,abstract,created,URL,author", "mode": "json_api", "itemsPath": "message.items", "titlePaths": ["title.0"], "summaryPaths": ["abstract"], "authorPaths": ["author.0.family"], "affiliationPaths": ["author.0.affiliation", "author.1.affiliation", "author.2.affiliation", "author.3.affiliation", "author.4.affiliation"], "affiliationIncludes": ["Nanjing University of Science and Technology", "NJUST", "南京理工大学"], "urlTemplate": "{raw:URL}", "summaryIsBody": true, "publishedAtPath": "created.date-time", "externalIdPath": "DOI", "universityRadar": true, "university": "南京理工大学", "_aihot": { "initialBackfillLimit": 12 }
+      },
+      "tier": "T1_5", "owner_entity_id": null, "participation_mode": "editorial", "interval_minutes": 60,
+      "tags": ["高校", "论文", "南京理工大学", "电力电子", "电机驱动", "智能电网"], "site_fulltext": false, "syndicate_fulltext": false
     }
   ]
 }

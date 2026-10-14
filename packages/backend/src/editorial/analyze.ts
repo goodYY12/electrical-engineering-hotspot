@@ -27,6 +27,7 @@ import {
 import { CATEGORY_GUIDE, CATEGORY_TAGS, ENTITIES, ENTITY_TAGS, ITEM_TYPES, normalizeTags, TOPIC_TAGS } from "./vocabulary.ts";
 import { promptText, promptVersion } from "./prompts.ts";
 import { originalPostCopy } from "../content/posts.ts";
+import { analyzeUniversityResearch } from "../../../../modules/university-radar/analyzer.ts";
 
 export { buildMaterial, loadAnalyzeInput, type AnalyzeInputArticle };
 
@@ -476,7 +477,7 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts = {}): 
 }
 
 /** One judgement from the steps: the selection rule, the reader-facing copy and the structure. */
-export function normalizeAnalysis(run: AnalysisRun) {
+export function normalizeAnalysis(run: AnalysisRun, article?: Pick<AnalyzeInputArticle, "title" | "author" | "bodyText" | "excerpt" | "source">) {
   const label = run.prefilter.label;
   const titleZh = collapseWhitespace(run.writing?.titleZh ?? "");
   const summaryZh = (run.writing?.summaryZh ?? "").trim();
@@ -497,6 +498,12 @@ export function normalizeAnalysis(run: AnalysisRun) {
   }
   const expert = run.writing?.expert;
   const scoreConfidence = run.scores?.details.map((detail) => detail.confidence).filter((value): value is number => value !== undefined) ?? [];
+  const universityRadar = article ? analyzeUniversityResearch({
+    title: article.title,
+    body: [article.author, article.bodyText ?? article.excerpt].filter(Boolean).join("\n"),
+    sourceName: article.source.name,
+    sourceConfig: article.source.config,
+  }) : null;
   return {
     relevance,
     selected,
@@ -525,6 +532,7 @@ export function normalizeAnalysis(run: AnalysisRun) {
       hot_score: score,
       confidence: expert?.confidence || (scoreConfidence.length ? Math.round(scoreConfidence.reduce((a, b) => a + b, 0) / scoreConfidence.length) : 0),
     },
+    ...(universityRadar ? { universityRadar } : {}),
   };
 }
 
@@ -548,7 +556,7 @@ export async function analyzeArticle(articleId: string, opts: StepOpts = {}): Pr
   // Its page first; extraction queues the analysis again (normally the queue already routed it there).
   if (waitsForPage(input)) return { analysisId: null, stale: false, needsBody: true, output: null, receiptIds: [], reused: true };
   const run = await runAnalysis(input, opts);
-  const out = normalizeAnalysis(run);
+  const out = normalizeAnalysis(run, input);
   const receiptIds = [
     run.prefilter.receiptId, ...(run.scores?.receiptIds ?? []), ...(run.writing?.receiptIds ?? []), ...(run.structure ? [run.structure.receiptId] : []),
   ];
@@ -558,7 +566,7 @@ export async function analyzeArticle(articleId: string, opts: StepOpts = {}): Pr
     scores: out.scores, scoreDetails: run.scores?.details ?? [], scoreModel: out.scoreModel, threshold: out.threshold, ...(out.scoreRefused ? { scoreRefused: true } : {}),
     ...(w ? { writer: w.kind, writerModel: w.model, itemType: w.itemType ?? null, authorRole: w.authorRole ?? null } : {}),
     ...(w?.identityGuard?.outcome === "fallback" ? { identityGuard: w.identityGuard } : {}),
-    scope: out.scope, fact: out.fact, expertAnalysis: out.expertAnalysis,
+    scope: out.scope, fact: out.fact, expertAnalysis: out.expertAnalysis, ...(out.universityRadar ? { universityRadar: out.universityRadar } : {}),
   };
   const committed = await sql.begin(async (tx) => {
     const [current] = await tx<{ revision: number }[]>`SELECT revision FROM articles WHERE id = ${articleId} FOR UPDATE`;

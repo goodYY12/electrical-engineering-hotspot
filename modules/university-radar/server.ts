@@ -1,0 +1,68 @@
+import type { FastifyInstance } from "fastify";
+import { sql } from "@aihot/backend/db";
+import { defineServerModule } from "@aihot/backend/modules";
+import { UNIVERSITY_PROFILES } from "./universities.ts";
+import { generateGraduationTopics, type GraduationTopic } from "./topic-generator.ts";
+
+export interface UniversityResearchItem { id: string; title: string; source: string; discoveredAt: string }
+export interface UniversityRadarEntry { university: string; region: string; department: string; articleCount: number; researchDirections: string[]; graduationTopics: string[]; items: UniversityResearchItem[] }
+export interface UniversityRadarResponse { generatedAt: string; totalArticles: number; entries: UniversityRadarEntry[] }
+export interface GraduationTopicsResponse { generatedAt: string; topics: Array<GraduationTopic & { university: string; department: string }> }
+
+async function readRadar(): Promise<UniversityRadarResponse> {
+  const now = new Date();
+  const rows = await sql<{ university: string; department: string; article_count: number; directions: string[] | null; graduation_topics: string[] | null }[]>`
+    SELECT an.output->'universityRadar'->>'university' AS university,
+      an.output->'universityRadar'->>'department' AS department, count(*)::int AS article_count,
+      array_agg(DISTINCT an.output->'universityRadar'->>'researchDirection') AS directions,
+      array_agg(DISTINCT topic->>'title') FILTER (WHERE topic->>'title' IS NOT NULL) AS graduation_topics
+    FROM publications p JOIN analyses an ON an.id = p.analysis_id JOIN sources s ON s.id = p.source_id
+    LEFT JOIN LATERAL jsonb_array_elements(coalesce(an.output->'universityRadar'->'graduationTopics', '[]'::jsonb)) topic ON true
+    WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 365 * 86_400_000)}
+      AND an.output ? 'universityRadar'
+      AND s.config->>'category' = 'university'
+    GROUP BY an.output->'universityRadar'->>'university', an.output->'universityRadar'->>'department'`;
+  const items = await sql<{ university: string; id: string; title: string; source: string; discovered_at: Date }[]>`
+    SELECT an.output->'universityRadar'->>'university' AS university, p.article_id AS id, p.title, s.name AS source, p.discovered_at
+    FROM publications p JOIN analyses an ON an.id = p.analysis_id JOIN sources s ON s.id = p.source_id
+    WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 365 * 86_400_000)}
+      AND an.output ? 'universityRadar'
+      AND s.config->>'category' = 'university'
+    ORDER BY p.discovered_at DESC, p.article_id DESC LIMIT 200`;
+  const itemsByUniversity = new Map<string, UniversityResearchItem[]>();
+  for (const item of items) itemsByUniversity.set(item.university, [...(itemsByUniversity.get(item.university) ?? []), { id: item.id, title: item.title, source: item.source, discoveredAt: item.discovered_at.toISOString() }]);
+  const entries = UNIVERSITY_PROFILES.map((profile) => {
+    const row = rows.find((candidate) => candidate.university === profile.name);
+    return {
+      university: profile.name,
+      region: profile.region,
+      department: row?.department ?? profile.department,
+      articleCount: Number(row?.article_count ?? 0),
+      researchDirections: row ? (row.directions ?? []).filter(Boolean) : profile.researchDirections.map((direction) => direction.name),
+      graduationTopics: row?.graduation_topics ?? [],
+      items: itemsByUniversity.get(profile.name) ?? [],
+    };
+  });
+  entries.sort((a, b) => b.articleCount - a.articleCount || a.university.localeCompare(b.university, "zh-CN"));
+  return { generatedAt: now.toISOString(), totalArticles: entries.reduce((sum, entry) => sum + entry.articleCount, 0), entries };
+}
+
+async function readGraduationTopics(): Promise<GraduationTopicsResponse> {
+  const now = new Date();
+  const radar = await readRadar();
+  const topics = radar.entries.flatMap((entry) => {
+    const profile = UNIVERSITY_PROFILES.find((university) => university.name === entry.university);
+    return profile ? generateGraduationTopics(profile, entry.researchDirections).map((topic) => ({ ...topic, university: profile.name, department: profile.department })) : [];
+  });
+  return { generatedAt: now.toISOString(), topics };
+}
+
+export const UNIVERSITY_RADAR_SERVER = defineServerModule({
+  name: "university-radar",
+  http: (app: FastifyInstance) => {
+    app.get("/api/university-radar", async (_request, reply) => { reply.header("Cache-Control", "public, max-age=60, s-maxage=300"); return readRadar(); });
+    app.get("/api/university-radar/graduation-topics", async (_request, reply) => { reply.header("Cache-Control", "public, max-age=300, s-maxage=900"); return readGraduationTopics(); });
+  },
+  sitemap: { pages: [{ loc: "/university-radar", changefreq: "hourly", priority: 0.7 }, { loc: "/graduation-topics", changefreq: "daily", priority: 0.6 }] },
+  llms: () => ({ api: ["- `/api/university-radar`：中国高校电气科研动态和毕业设计方向。", "- `/api/university-radar/graduation-topics`：本科毕业设计选题建议。"], pages: ["- `/university-radar`：中国高校电气科研雷达。", "- `/graduation-topics`：电气工程本科毕业设计选题。"] }),
+});

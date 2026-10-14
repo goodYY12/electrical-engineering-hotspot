@@ -20,7 +20,10 @@ if (config.environmentName === "production" && !(config.adminPassword && config.
 }
 
 const app = await buildApp();
-await app.listen({ port: config.apiPort, host: process.env.API_HOST || "127.0.0.1" });
+// Railway and other managed runtimes provide PORT and require binding on all interfaces.
+const port = Number.parseInt(process.env.PORT || process.env.API_PORT || String(config.apiPort), 10);
+const host = process.env.API_HOST || "0.0.0.0";
+await app.listen({ port, host });
 startHeartbeat(`api:${config.apiPort}`);
 startWorkerWatchdog();
 

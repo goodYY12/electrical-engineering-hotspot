@@ -13,6 +13,14 @@ export { shutdownSignal } from "../lib/shutdown.ts";
 let boss: PgBoss | null = null;
 let starting: Promise<PgBoss> | null = null;
 
+function pgBossConnectionString(connectionString: string): string {
+  const url = new URL(connectionString);
+  if (url.searchParams.get("sslmode") === "require" && !url.searchParams.has("uselibpqcompat")) {
+    url.searchParams.set("uselibpqcompat", "true");
+  }
+  return url.toString();
+}
+
 export interface JobData {
   "content.analyze": { articleId: string; attemptTag?: string };
   "content.extract-body": { articleId: string };
@@ -61,7 +69,7 @@ const ensured = new Set<string>();
 export async function getBoss(): Promise<PgBoss> {
   if (boss) return boss;
   starting ??= (async () => {
-    const b = new PgBoss({ connectionString: config.databaseUrl, max: 4, schema: "pgboss", application_name: "aihot-jobs" });
+    const b = new PgBoss({ connectionString: pgBossConnectionString(config.databaseUrl), max: 4, schema: "pgboss", application_name: "aihot-jobs" });
     b.on("error", (err) => console.error("[pg-boss]", logError(err)));
     try {
       await b.start();

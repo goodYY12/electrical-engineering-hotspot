@@ -5,6 +5,7 @@
 // an article wait and retry with backoff; only a permanent refusal or exhausted retries end in
 // "failed", which the admin re-queues in bulk.
 import type { PgBoss } from "pg-boss";
+import { config } from "../config.ts";
 import { sql, type Db } from "../db.ts";
 import { extractArticleBody, pageFetchable } from "../content/extract.ts";
 import { analyzeArticle, AnalysisInterruptedError } from "../editorial/analyze.ts";
@@ -70,6 +71,9 @@ export async function queueProcessing(articleId: string, opts: { step?: Step; at
   const r = await route(articleId, db);
   if (!r) return null;
   const step = opts.step ?? r.step;
+  // Keep editorial work pending while the production model safety valve is closed. Once it is
+  // enabled, content.sweep finds these untouched rows and queues them normally.
+  if (step === "analyze" && !r.signal && !config.modelCallsEnabled) return null;
   const [queued] = await db<{ processing_attempt_tag: string | null }[]>`
     UPDATE articles SET processing_queued_at = now(), processing_attempt_tag = coalesce(${opts.attemptTag ?? null}, processing_attempt_tag)
     WHERE id = ${articleId} RETURNING processing_attempt_tag`;

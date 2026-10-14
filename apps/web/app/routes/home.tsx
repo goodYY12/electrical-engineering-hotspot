@@ -1,13 +1,14 @@
-import { redirect, useLoaderData } from "react-router";
+import { Link, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/home";
 import type { TimelineResponse } from "@aihot/contracts/site";
-import { cachedPage, loadOr404 } from "../lib/api.server";
+import { apiGet, cachedPage, loadOr404 } from "../lib/api.server";
 import { pageReuse } from "../lib/page-reuse";
 import { filterParams, itemListLd, listPath, pageMeta, readFilters, siteLd } from "../lib/seo";
 import type { Screen } from "../components/shell/screens";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
 import { ActiveFilters, CategoryTabs, FeedBar, SearchField } from "../features/feed/Filters";
+import type { UniversityRadarResponse } from "../../../../modules/university-radar/server.ts";
 
 export const handle: Screen = { tab: "featured", name: "精选" };
 export { pageHeaders as headers } from "../lib/api.server";
@@ -20,8 +21,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (q && q.trim()) throw redirect(`/all${url.search}`);
   const filters = readFilters(url.searchParams);
   const upstream = new Headers();
-  const data = await loadOr404<TimelineResponse>(listPath("/api/site/timeline", filterParams(filters)), { responseHeaders: upstream, signal: request.signal });
-  return cachedPage(60, { data, filters }, upstream);
+  const [data, university] = await Promise.all([
+    loadOr404<TimelineResponse>(listPath("/api/site/timeline", filterParams(filters)), { responseHeaders: upstream, signal: request.signal }),
+    apiGet<UniversityRadarResponse>("/api/university-radar", { signal: request.signal }).catch(() => null),
+  ]);
+  return cachedPage(60, { data, filters, university }, upstream);
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -31,7 +35,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const { data, filters } = useLoaderData<typeof loader>();
+  const { data, filters, university } = useLoaderData<typeof loader>();
   const title = filters.tag ? `#${filters.tag}` : "精选";
   return (
     <div className="pb-6">
@@ -47,6 +51,8 @@ export default function Home() {
       </div>
 
       {data.hot && <HotTopics entries={data.hot} />}
+
+      {university && <Link to="/university-radar" className="card my-5 block p-5 transition-colors hover:border-accent"><div className="flex items-start justify-between gap-3"><div><p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-accent">University Research Radar</p><h2 className="mt-1 text-[16px] font-semibold text-ink">中国高校科研雷达</h2><p className="mt-1 text-[12px] text-ink-3">今日高校科研：{university.totalArticles} 条</p></div><span className="text-[18px] text-accent">→</span></div><div className="mt-3 flex flex-wrap gap-2">{["储能", "智能电网", "电力电子"].map((direction) => <span key={direction} className="rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-3">{direction}</span>)}</div></Link>}
 
       <Timeline initial={data} filters={data.filters} />
     </div>

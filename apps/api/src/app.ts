@@ -88,6 +88,12 @@ export async function buildApp(): Promise<FastifyInstance> {
     await sql`SELECT 1`;
     return reply.header("Cache-Control", "no-store").send({ ok: true, db: "ok", ms: Date.now() - started, release: process.env.AIHOT_RELEASE ?? "dev" });
   });
+  // Railway health checks use the conventional root path; keep the API health endpoint too.
+  app.get("/health", async (_req, reply) => {
+    const started = Date.now();
+    await sql`SELECT 1`;
+    return reply.header("Cache-Control", "no-store").send({ ok: true, db: "ok", ms: Date.now() - started, release: process.env.AIHOT_RELEASE ?? "dev" });
+  });
 
   registerSite(app);
   registerOg(app);
