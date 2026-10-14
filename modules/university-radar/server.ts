@@ -16,16 +16,18 @@ async function readRadar(): Promise<UniversityRadarResponse> {
       an.output->'universityRadar'->>'department' AS department, count(*)::int AS article_count,
       array_agg(DISTINCT an.output->'universityRadar'->>'researchDirection') AS directions,
       array_agg(DISTINCT topic->>'title') FILTER (WHERE topic->>'title' IS NOT NULL) AS graduation_topics
-    FROM publications p JOIN analyses an ON an.id = p.analysis_id
+    FROM publications p JOIN analyses an ON an.id = p.analysis_id JOIN sources s ON s.id = p.source_id
     LEFT JOIN LATERAL jsonb_array_elements(coalesce(an.output->'universityRadar'->'graduationTopics', '[]'::jsonb)) topic ON true
     WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 365 * 86_400_000)}
       AND an.output ? 'universityRadar'
+      AND s.config->>'category' = 'university'
     GROUP BY an.output->'universityRadar'->>'university', an.output->'universityRadar'->>'department'`;
   const items = await sql<{ university: string; id: string; title: string; source: string; discovered_at: Date }[]>`
     SELECT an.output->'universityRadar'->>'university' AS university, p.article_id AS id, p.title, s.name AS source, p.discovered_at
     FROM publications p JOIN analyses an ON an.id = p.analysis_id JOIN sources s ON s.id = p.source_id
     WHERE p.visibility = 'public' AND p.eligible = true AND p.discovered_at > ${new Date(now.getTime() - 365 * 86_400_000)}
       AND an.output ? 'universityRadar'
+      AND s.config->>'category' = 'university'
     ORDER BY p.discovered_at DESC, p.article_id DESC LIMIT 200`;
   const itemsByUniversity = new Map<string, UniversityResearchItem[]>();
   for (const item of items) itemsByUniversity.set(item.university, [...(itemsByUniversity.get(item.university) ?? []), { id: item.id, title: item.title, source: item.source, discoveredAt: item.discovered_at.toISOString() }]);
